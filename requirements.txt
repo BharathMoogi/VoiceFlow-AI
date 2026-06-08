@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+
+sqlalchemy
+asyncpg
+psycopg2-binary
+alembic
+
+PyJWT
+passlib[bcrypt]
+python-multipart
+
+email-validator
+google-generativeai

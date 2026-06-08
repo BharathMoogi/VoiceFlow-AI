@@ -1,0 +1,10 @@
+from fastapi import APIRouter
+from app.api.endpoints import auth, conversation, email, speech, health
+
+api_router = APIRouter()
+api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+api_router.include_router(conversation.router, prefix="/conversations", tags=["conversations"])
+api_router.include_router(email.router, prefix="/emails", tags=["emails"])
+api_router.include_router(speech.router, prefix="/speech", tags=["speech"])
+api_router.include_router(health.router, prefix="/health", tags=["health"])
+
