@@ -13,7 +13,11 @@ class Settings(BaseSettings):
     POSTGRES_PORT: str = "5432"
     POSTGRES_DB: str = "voiceflow_db"
 
-    DATABASE_URL: Optional[str] = None
+    # Supabase IPv4 pooler URL — used as default if DATABASE_URL env var is not set
+    DATABASE_URL: Optional[str] = (
+        "postgresql+asyncpg://postgres.peupumasgzqraqgieqmd:Moogibharath"
+        "@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?ssl=true"
+    )
 
     @model_validator(mode="after")
     def assemble_db_connection(self) -> "Settings":
