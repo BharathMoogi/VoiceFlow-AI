@@ -1,0 +1,16 @@
+# Force LF line endings for all files on checkout
+* text=auto
+
+# Shell scripts MUST use LF or bash will fail on Linux
+*.sh text eol=lf
+
+# Python files use LF
+*.py text eol=lf
+
+# Config files use LF
+*.toml text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+Dockerfile text eol=lf
