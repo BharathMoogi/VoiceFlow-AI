@@ -9,7 +9,7 @@ import sqlalchemy as sa
 from sqlalchemy import func
 
 # revision identifiers, used by Alembic.
-revision = '004_add_email_verification_tokens'
+revision = '004_tokens'
 down_revision = '003_add_timestamps'
 branch_labels = None
 depends_on = None
