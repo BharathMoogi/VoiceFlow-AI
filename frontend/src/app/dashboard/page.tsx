@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Mic,
@@ -11,92 +11,20 @@ import {
   CheckCircle,
   ArrowRight,
   Zap,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
+import { getDashboardStats, type DashboardStats, isLoggedIn } from "@/lib/api";
 
-const stats = [
-  {
-    label: "Transcriptions",
-    value: "128",
-    change: "+12 this week",
-    icon: Mic,
-    color: "text-indigo-400",
-    bg: "bg-indigo-500/10 border-indigo-500/20",
-  },
-  {
-    label: "Emails Sent",
-    value: "54",
-    change: "+7 this week",
-    icon: Mail,
-    color: "text-emerald-400",
-    bg: "bg-emerald-500/10 border-emerald-500/20",
-  },
-  {
-    label: "Conversations",
-    value: "23",
-    change: "+3 today",
-    icon: MessageSquare,
-    color: "text-violet-400",
-    bg: "bg-violet-500/10 border-violet-500/20",
-  },
-  {
-    label: "Success Rate",
-    value: "98.2%",
-    change: "All-time high",
-    icon: TrendingUp,
-    color: "text-pink-400",
-    bg: "bg-pink-500/10 border-pink-500/20",
-  },
-];
-
-const recentActivity = [
-  {
-    id: 1,
-    type: "email_sent",
-    title: "Project Update Email Sent",
-    desc: "To: team@company.com",
-    time: "2 min ago",
-    icon: CheckCircle,
-    iconColor: "text-emerald-400",
-  },
-  {
-    id: 2,
-    type: "transcription",
-    title: "Voice Memo Transcribed",
-    desc: "meeting_notes_06_08.wav — 2:35 min",
-    time: "18 min ago",
-    icon: Mic,
-    iconColor: "text-indigo-400",
-  },
-  {
-    id: 3,
-    type: "draft",
-    title: "Email Draft Generated",
-    desc: "Subject: Q3 Review Follow-up",
-    time: "1 hr ago",
-    icon: Mail,
-    iconColor: "text-violet-400",
-  },
-  {
-    id: 4,
-    type: "conversation",
-    title: "New Conversation Started",
-    desc: "\"Product launch brief\"",
-    time: "3 hr ago",
-    icon: MessageSquare,
-    iconColor: "text-amber-400",
-  },
-  {
-    id: 5,
-    type: "email_sent",
-    title: "Invitation Email Sent",
-    desc: "To: client@partner.io",
-    time: "Yesterday",
-    icon: CheckCircle,
-    iconColor: "text-emerald-400",
-  },
-];
+// Icon + color mapping for activity types
+const activityConfig: Record<string, { icon: typeof Mic; color: string }> = {
+  email_sent: { icon: CheckCircle, color: "text-emerald-400" },
+  draft: { icon: Mail, color: "text-violet-400" },
+  transcription: { icon: Mic, color: "text-indigo-400" },
+  conversation: { icon: MessageSquare, color: "text-amber-400" },
+};
 
 const quickActions = [
   {
@@ -123,6 +51,120 @@ const quickActions = [
 ];
 
 export default function DashboardPage() {
+  const [data, setData] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      setError("Please log in to view your dashboard.");
+      setLoading(false);
+      return;
+    }
+
+    getDashboardStats()
+      .then((result) => {
+        setData(result);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Failed to load dashboard stats:", err);
+        setError(err.message || "Failed to load dashboard data.");
+        setLoading(false);
+      });
+  }, []);
+
+  // Get greeting based on time of day
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
+
+  // ── Loading state ──────────────────────────────────────────────
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
+          <p className="text-sm text-zinc-400">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Error state ──────────────────────────────────────────────
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md w-full !p-6">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+              <AlertCircle className="h-6 w-6 text-red-400" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-white mb-1">Unable to load dashboard</p>
+              <p className="text-xs text-zinc-500">{error}</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setLoading(true);
+                setError(null);
+                getDashboardStats()
+                  .then((result) => { setData(result); setLoading(false); })
+                  .catch((err) => { setError(err.message); setLoading(false); });
+              }}
+            >
+              Try again
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!data) return null;
+
+  const { stats, recent_activity, user } = data;
+
+  const statCards = [
+    {
+      label: "Transcriptions",
+      value: stats.transcriptions.toLocaleString(),
+      change: stats.transcriptions_change,
+      icon: Mic,
+      color: "text-indigo-400",
+      bg: "bg-indigo-500/10 border-indigo-500/20",
+    },
+    {
+      label: "Emails Sent",
+      value: stats.emails_sent.toLocaleString(),
+      change: stats.emails_sent_change,
+      icon: Mail,
+      color: "text-emerald-400",
+      bg: "bg-emerald-500/10 border-emerald-500/20",
+    },
+    {
+      label: "Conversations",
+      value: stats.conversations.toLocaleString(),
+      change: stats.conversations_change,
+      icon: MessageSquare,
+      color: "text-violet-400",
+      bg: "bg-violet-500/10 border-violet-500/20",
+    },
+    {
+      label: "Success Rate",
+      value: `${stats.success_rate}%`,
+      change: stats.success_rate_label,
+      icon: TrendingUp,
+      color: "text-pink-400",
+      bg: "bg-pink-500/10 border-pink-500/20",
+    },
+  ];
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Welcome */}
@@ -130,17 +172,22 @@ export default function DashboardPage() {
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative">
           <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-1">Welcome back</p>
-          <h1 className="text-2xl font-bold text-white mb-1">Good morning, Demo User 👋</h1>
+          <h1 className="text-2xl font-bold text-white mb-1">{getGreeting()}, {user.name} 👋</h1>
           <p className="text-sm text-zinc-400">
-            You have <span className="text-white font-medium">3 email drafts</span> ready to send and{" "}
-            <span className="text-white font-medium">1 pending transcription</span>.
+            {user.draft_count > 0 ? (
+              <>
+                You have <span className="text-white font-medium">{user.draft_count} email draft{user.draft_count !== 1 ? "s" : ""}</span> ready to send.
+              </>
+            ) : (
+              <>Your dashboard is up to date. Start by recording a voice memo or generating an email.</>
+            )}
           </p>
         </div>
       </div>
 
       {/* Stats grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        {stats.map((stat) => {
+        {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
             <Card key={stat.label} hoverEffect className="!p-5">
@@ -198,24 +245,35 @@ export default function DashboardPage() {
             </div>
           </div>
           <div className="divide-y divide-zinc-800/40">
-            {recentActivity.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.id}
-                  className="flex items-start gap-3 p-4 hover:bg-zinc-800/20 transition-colors duration-150"
-                >
-                  <div className="flex-shrink-0 mt-0.5">
-                    <Icon className={`h-4 w-4 ${item.iconColor}`} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-zinc-200 truncate">{item.title}</p>
-                    <p className="text-xs text-zinc-500 truncate">{item.desc}</p>
-                  </div>
-                  <span className="text-[11px] text-zinc-600 flex-shrink-0 mt-0.5">{item.time}</span>
+            {recent_activity.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 px-4">
+                <div className="p-3 rounded-xl bg-zinc-800/40 mb-3">
+                  <Clock className="h-5 w-5 text-zinc-600" />
                 </div>
-              );
-            })}
+                <p className="text-sm text-zinc-400 font-medium">No activity yet</p>
+                <p className="text-xs text-zinc-600 mt-1">Your recent actions will appear here</p>
+              </div>
+            ) : (
+              recent_activity.map((item) => {
+                const config = activityConfig[item.type] || { icon: CheckCircle, color: "text-zinc-400" };
+                const Icon = config.icon;
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-start gap-3 p-4 hover:bg-zinc-800/20 transition-colors duration-150"
+                  >
+                    <div className="flex-shrink-0 mt-0.5">
+                      <Icon className={`h-4 w-4 ${config.color}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-zinc-200 truncate">{item.title}</p>
+                      <p className="text-xs text-zinc-500 truncate">{item.desc}</p>
+                    </div>
+                    <span className="text-[11px] text-zinc-600 flex-shrink-0 mt-0.5">{item.time}</span>
+                  </div>
+                );
+              })
+            )}
           </div>
         </Card>
       </div>

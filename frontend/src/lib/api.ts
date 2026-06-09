@@ -118,3 +118,38 @@ export async function transcribeAudio(file: File) {
   }
   return res.json();
 }
+
+// ---------- Dashboard endpoints ----------
+export interface DashboardStats {
+  stats: {
+    transcriptions: number;
+    transcriptions_change: string;
+    emails_sent: number;
+    emails_sent_change: string;
+    conversations: number;
+    conversations_change: string;
+    success_rate: number;
+    success_rate_label: string;
+  };
+  recent_activity: Array<{
+    id: string;
+    type: string;
+    title: string;
+    desc: string;
+    time: string;
+  }>;
+  user: {
+    name: string;
+    draft_count: number;
+  };
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  return apiFetch<DashboardStats>("/dashboard/stats");
+}
+
+// ---------- Conversation endpoints ----------
+export async function getConversations() {
+  return apiFetch<Array<{ id: string; title: string; created_at: string }>>("/conversations/");
+}
+
