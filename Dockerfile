@@ -16,9 +16,5 @@ COPY . .
 
 # Expose port for FastAPI
 EXPOSE 8000
-
-# Make start script executable and run it
-RUN chmod +x /app/start.sh
-
-# Command to run the app
-CMD ["/app/start.sh"]
+# Command to run migrations then start server
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
