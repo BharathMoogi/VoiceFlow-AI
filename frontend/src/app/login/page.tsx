@@ -6,34 +6,42 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/UI/Button";
 import { Input } from "@/components/UI/Input";
 import { KeyRound, Mail, User, Mic } from "lucide-react";
+import { login, register, saveTokens } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Fields state
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     if (!email || !password || (activeTab === "signup" && !name)) {
       setError("Please fill out all fields.");
       return;
     }
 
     setIsLoading(true);
-    
-    // Simulate API call and redirect
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      if (activeTab === "login") {
+        const tokens = await login(email, password);
+        saveTokens(tokens.access_token, tokens.refresh_token);
+      } else {
+        const tokens = await register(name, email, password);
+        saveTokens(tokens.access_token, tokens.refresh_token);
+      }
       router.push("/dashboard");
-    }, 1200);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -57,27 +65,17 @@ export default function LoginPage() {
         <CardHeader>
           <div className="grid grid-cols-2 gap-2 bg-zinc-900/50 p-1.5 rounded-lg border border-zinc-800 mb-6">
             <button
-              onClick={() => {
-                setActiveTab("login");
-                setError("");
-              }}
+              onClick={() => { setActiveTab("login"); setError(""); }}
               className={`py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                activeTab === "login"
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
+                activeTab === "login" ? "bg-indigo-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
               Sign In
             </button>
             <button
-              onClick={() => {
-                setActiveTab("signup");
-                setError("");
-              }}
+              onClick={() => { setActiveTab("signup"); setError(""); }}
               className={`py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                activeTab === "signup"
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
+                activeTab === "signup" ? "bg-indigo-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
               Sign Up
@@ -160,7 +158,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
-                onClick={() => alert("Mock password reset link triggered.")}
+                onClick={() => alert("Password reset coming soon.")}
               >
                 Forgot your password?
               </button>
