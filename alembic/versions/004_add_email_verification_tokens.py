@@ -21,7 +21,7 @@ def upgrade():
         sa.Column('user_id', sa.Integer, sa.ForeignKey('users.id'), nullable=False),
         sa.Column('token', sa.String(length=255), nullable=False, unique=True),
         sa.Column('expires_at', sa.DateTime, nullable=False),
-        sa.Column('used', sa.Boolean, nullable=False, server_default=sa.text('0')),
+        sa.Column('used', sa.Boolean, nullable=False, server_default=sa.text('false')),
         sa.Column('created_at', sa.DateTime, server_default=func.now(), nullable=False),
     )
     op.create_index('ix_email_verification_tokens_user_id', 'email_verification_tokens', ['user_id'])
