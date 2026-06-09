@@ -26,7 +26,7 @@ def upgrade() -> None:
     sa.Column('token', sa.String(), nullable=False),
     sa.Column('expires_at', sa.DateTime(), nullable=False),
     sa.Column('used', sa.Boolean(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -38,7 +38,7 @@ def upgrade() -> None:
     sa.Column('token', sa.String(), nullable=False),
     sa.Column('expires_at', sa.DateTime(), nullable=False),
     sa.Column('revoked', sa.Boolean(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=True),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')

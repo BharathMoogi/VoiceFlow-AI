@@ -17,9 +17,8 @@ COPY . .
 # Expose port for FastAPI
 EXPOSE 8000
 
-# Copy and set up the start script
-COPY start.sh .
-RUN chmod +x start.sh
+# Make start script executable and run it
+RUN chmod +x /app/start.sh
 
 # Command to run the app
-CMD ["./start.sh"]
+CMD ["/app/start.sh"]
