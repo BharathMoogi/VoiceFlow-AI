@@ -71,12 +71,8 @@ cp .env.example .env
 Edit `.env` with your values:
 
 ```env
-# Database
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=your_password
-POSTGRES_SERVER=localhost
-POSTGRES_PORT=5432
-POSTGRES_DB=voiceflow_db
+# Database (Supabase or local)
+DATABASE_URL=postgresql://postgres:password@localhost:5432/voiceflow_db
 
 # JWT
 SECRET_KEY=your_secret_key_here
@@ -96,9 +92,39 @@ SMTP_USE_SSL=False
 
 ### 4. Create the PostgreSQL database
 
+If you are running locally, create your database:
 ```sql
 CREATE DATABASE voiceflow_db;
 ```
+For production, use [Supabase](https://supabase.com) and copy your `DATABASE_URL`.
+
+---
+
+## Deployment (Free Tier)
+
+This project is configured for a 100% free-tier deployment using **Supabase** (Database), **Railway** (Backend), and **Vercel** (Frontend).
+
+### 1. Database (Supabase)
+1. Go to [Supabase](https://supabase.com) and create a new project.
+2. Under **Project Settings -> Database**, copy the **Connection string (URI)**.
+3. Make sure to replace `[YOUR-PASSWORD]` with your actual database password.
+
+### 2. Backend (Railway)
+1. Go to [Railway.app](https://railway.app) and create a new project -> **Deploy from GitHub repo**.
+2. Select this repository. Railway will automatically detect the `Dockerfile` and `railway.toml`.
+3. Go to the **Variables** tab in Railway and add your environment variables:
+   - `DATABASE_URL` (from Supabase)
+   - `SECRET_KEY` (generate a random string)
+   - `GEMINI_API_KEY`
+   - `SMTP_USERNAME`, `SMTP_PASSWORD`, etc.
+4. Railway will automatically run `alembic upgrade head` and start your FastAPI server. Copy the public URL Railway generates (e.g., `https://voiceflow-backend.up.railway.app`).
+
+### 3. Frontend (Vercel)
+1. Go to [Vercel](https://vercel.com) and **Add New Project**.
+2. Import this repository and set the **Root Directory** to `frontend`.
+3. In the **Environment Variables** section, add:
+   - `NEXT_PUBLIC_API_URL`: The Railway backend URL you got in the previous step (e.g., `https://voiceflow-backend.up.railway.app`).
+4. Click **Deploy**. Vercel will automatically build and host your Next.js application.
 
 ---
 
