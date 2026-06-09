@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # Supabase IPv4 pooler URL — used as default if DATABASE_URL env var is not set
     DATABASE_URL: Optional[str] = (
         "postgresql+asyncpg://postgres.peupumasgzqraqgieqmd:Moogibharath"
-        "@aws-0-ap-south-1.pooler.supabase.com:6543/postgres?ssl=true"
+        "@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?ssl=true"
     )
 
     @model_validator(mode="after")
