@@ -14,3 +14,4 @@ python-multipart
 
 email-validator
 google-generativeai
+slowapi
