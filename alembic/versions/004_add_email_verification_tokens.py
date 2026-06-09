@@ -18,7 +18,7 @@ def upgrade():
     op.create_table(
         'email_verification_tokens',
         sa.Column('id', sa.Integer, primary_key=True, nullable=False),
-        sa.Column('user_id', sa.Integer, sa.ForeignKey('users.id'), nullable=False),
+        sa.Column('user_id', sa.Integer, sa.ForeignKey('user.id'), nullable=False),
         sa.Column('token', sa.String(length=255), nullable=False, unique=True),
         sa.Column('expires_at', sa.DateTime, nullable=False),
         sa.Column('used', sa.Boolean, nullable=False, server_default=sa.text('false')),
