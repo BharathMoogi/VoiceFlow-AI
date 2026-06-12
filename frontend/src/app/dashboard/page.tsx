@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Mic,
   Mail,
@@ -16,7 +17,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
-import { getDashboardStats, type DashboardStats, isLoggedIn } from "@/lib/api";
+import { getDashboardStats, type DashboardStats, isLoggedIn, saveUserInfo } from "@/lib/api";
 
 // Icon + color mapping for activity types
 const activityConfig: Record<string, { icon: typeof Mic; color: string }> = {
@@ -51,28 +52,34 @@ const quickActions = [
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [data, setData] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn()) {
-      setError("Please log in to view your dashboard.");
-      setLoading(false);
+      // No token at all → go straight to login
+      router.replace("/login");
       return;
     }
 
     getDashboardStats()
       .then((result) => {
         setData(result);
+        // Cache user name for the sidebar
+        if (result.user?.name) {
+          saveUserInfo(result.user.name);
+        }
         setLoading(false);
       })
       .catch((err) => {
+        // apiFetch auto-redirects on 401, so if we reach here it's a non-auth error
         console.error("Failed to load dashboard stats:", err);
         setError(err.message || "Failed to load dashboard data.");
         setLoading(false);
       });
-  }, []);
+  }, [router]);
 
   // Get greeting based on time of day
   const getGreeting = () => {

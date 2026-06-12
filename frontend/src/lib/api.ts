@@ -19,10 +19,57 @@ export function saveTokens(access: string, refresh?: string) {
 export function clearTokens() {
   localStorage.removeItem("access_token");
   localStorage.removeItem("refresh_token");
+  localStorage.removeItem("user_name");
+  localStorage.removeItem("user_email");
 }
 
 export function isLoggedIn(): boolean {
   return !!getToken();
+}
+
+// ---------- User info helpers ----------
+export function saveUserInfo(name: string, email?: string) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("user_name", name);
+  if (email) localStorage.setItem("user_email", email);
+}
+
+export function getUserInfo(): { name: string; email: string } {
+  if (typeof window === "undefined") return { name: "User", email: "" };
+  return {
+    name: localStorage.getItem("user_name") || "User",
+    email: localStorage.getItem("user_email") || "",
+  };
+}
+
+// ---------- Auth redirect ----------
+function redirectToLogin() {
+  clearTokens();
+  if (typeof window !== "undefined") {
+    window.location.href = "/login";
+  }
+}
+
+// ---------- Token refresh ----------
+let refreshPromise: Promise<boolean> | null = null;
+
+async function tryRefreshToken(): Promise<boolean> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return false;
+
+  try {
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refreshToken }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    saveTokens(data.access_token, data.refresh_token);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // ---------- Generic fetch wrapper ----------
@@ -38,6 +85,49 @@ async function apiFetch<T>(
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+
+  // ── Handle 401 → attempt silent token refresh ──────────────
+  if (res.status === 401) {
+    // De-duplicate concurrent refresh attempts
+    if (!refreshPromise) {
+      refreshPromise = tryRefreshToken().finally(() => {
+        refreshPromise = null;
+      });
+    }
+
+    const refreshed = await refreshPromise;
+
+    if (refreshed) {
+      // Retry the original request with the new access token
+      const newToken = getToken();
+      const retryHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...(options.headers as Record<string, string>),
+      };
+      if (newToken) retryHeaders["Authorization"] = `Bearer ${newToken}`;
+
+      const retryRes = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        headers: retryHeaders,
+      });
+
+      if (!retryRes.ok) {
+        if (retryRes.status === 401) {
+          redirectToLogin();
+          throw new Error("Session expired. Please log in again.");
+        }
+        const err = await retryRes
+          .json()
+          .catch(() => ({ detail: retryRes.statusText }));
+        throw new Error(err.detail || "Request failed");
+      }
+      return retryRes.json();
+    } else {
+      // Both tokens invalid → redirect to login
+      redirectToLogin();
+      throw new Error("Session expired. Please log in again.");
+    }
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }));
@@ -88,6 +178,18 @@ export async function logout() {
     }).catch(() => {});
   }
   clearTokens();
+}
+
+// ---------- User profile ----------
+export interface UserProfile {
+  id: number;
+  email: string;
+  full_name: string;
+  is_active: boolean;
+}
+
+export async function fetchMe(): Promise<UserProfile> {
+  return apiFetch<UserProfile>("/auth/me");
 }
 
 // ---------- Email endpoints ----------
@@ -152,4 +254,3 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 export async function getConversations() {
   return apiFetch<Array<{ id: string; title: string; created_at: string }>>("/conversations/");
 }
-

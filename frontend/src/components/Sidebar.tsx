@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -15,6 +15,7 @@ import {
   Zap,
   User,
 } from "lucide-react";
+import { logout, getUserInfo, isLoggedIn, fetchMe, saveUserInfo } from "@/lib/api";
 
 const navItems = [
   {
@@ -48,8 +49,34 @@ export const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [userInfo, setUserInfo] = useState({ name: "User", email: "" });
+  const [loggingOut, setLoggingOut] = useState(false);
 
-  const handleLogout = () => {
+  // Load user info from localStorage, then refresh from API
+  useEffect(() => {
+    const stored = getUserInfo();
+    setUserInfo(stored);
+
+    if (isLoggedIn()) {
+      fetchMe()
+        .then((profile) => {
+          const name = profile.full_name || profile.email;
+          saveUserInfo(name, profile.email);
+          setUserInfo({ name, email: profile.email });
+        })
+        .catch(() => {
+          // Token may be invalid — apiFetch will handle redirect
+        });
+    }
+  }, []);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+    } catch {
+      // ignore errors during logout
+    }
     router.push("/login");
   };
 
@@ -132,20 +159,21 @@ export const Sidebar: React.FC = () => {
           </div>
           {!collapsed && (
             <div className="overflow-hidden">
-              <p className="text-xs font-semibold text-zinc-200 truncate">Demo User</p>
-              <p className="text-[10px] text-zinc-500 truncate">demo@voiceflow.ai</p>
+              <p className="text-xs font-semibold text-zinc-200 truncate">{userInfo.name}</p>
+              <p className="text-[10px] text-zinc-500 truncate">{userInfo.email}</p>
             </div>
           )}
         </div>
         <button
           onClick={handleLogout}
+          disabled={loggingOut}
           id="logout-btn"
-          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 group ${
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200 group disabled:opacity-50 ${
             collapsed ? "justify-center" : ""
           }`}
         >
           <LogOut className="h-4 w-4 flex-shrink-0 group-hover:text-rose-400" />
-          {!collapsed && <span>Logout</span>}
+          {!collapsed && <span>{loggingOut ? "Logging out…" : "Logout"}</span>}
         </button>
       </div>
     </aside>

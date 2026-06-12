@@ -6,6 +6,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.api import deps
+
 from app.core import security
 from app.core.config import settings
 from app.db.session import get_db
@@ -58,6 +60,18 @@ async def login_access_token(
 async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)) -> Token:
     """Compatibility endpoint forwarding to access-token logic."""
     return await login_access_token(db=db, form_data=form_data)
+
+@router.get("/me")
+async def get_current_user_info(
+    current_user: User = Depends(deps.get_current_active_user),
+) -> dict:
+    """Return profile info for the currently authenticated user."""
+    return {
+        "id": current_user.id,
+        "email": current_user.email,
+        "full_name": current_user.full_name or current_user.email,
+        "is_active": current_user.is_active,
+    }
 
 @router.post("/register", response_model=Token)
 async def register(

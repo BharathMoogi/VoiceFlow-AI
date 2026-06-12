@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/UI/Button";
 import { Input } from "@/components/UI/Input";
 import { KeyRound, Mail, User, Mic } from "lucide-react";
-import { login, register, saveTokens } from "@/lib/api";
+import { login, register, saveTokens, fetchMe, saveUserInfo } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -36,6 +36,15 @@ export default function LoginPage() {
         const tokens = await register(name, email, password);
         saveTokens(tokens.access_token, tokens.refresh_token);
       }
+
+      // Fetch and cache user profile for sidebar display
+      try {
+        const profile = await fetchMe();
+        saveUserInfo(profile.full_name || profile.email, profile.email);
+      } catch {
+        // Non-critical — sidebar will still work with fallback
+      }
+
       router.push("/dashboard");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
