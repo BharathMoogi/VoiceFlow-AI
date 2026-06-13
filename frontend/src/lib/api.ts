@@ -1,4 +1,6 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8001/api/v1";
+import { insforge } from './insforge';
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 
 // ---------- Token helpers ----------
 export function getToken(): string | null {
@@ -144,18 +146,13 @@ export interface AuthTokens {
 }
 
 export async function login(email: string, password: string): Promise<AuthTokens> {
-  // Backend uses OAuth2PasswordRequestForm — needs form-encoded body
-  const body = new URLSearchParams({ username: email, password });
-  const res = await fetch(`${API_BASE}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: body.toString(),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Login failed" }));
-    throw new Error(err.detail || "Login failed");
-  }
-  return res.json();
+  const { data, error } = await insforge.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(error.message);
+  return {
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+    token_type: 'bearer'
+  };
 }
 
 export async function register(
@@ -163,20 +160,34 @@ export async function register(
   email: string,
   password: string
 ): Promise<AuthTokens> {
-  return apiFetch<AuthTokens>("/auth/register", {
-    method: "POST",
-    body: JSON.stringify({ full_name, email, password }),
+  const { data, error } = await insforge.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name }
+    }
   });
+  if (error) throw new Error(error.message);
+  
+  // Insert profile manually since triggers might not be set up
+  if (data.user) {
+    await insforge.from('profiles').insert([{ id: data.user.id, full_name }]);
+  }
+  
+  if (!data.session) {
+    // If email confirmation is required
+    throw new Error('Please check your email to confirm registration');
+  }
+
+  return {
+    access_token: data.session.access_token,
+    refresh_token: data.session.refresh_token,
+    token_type: 'bearer'
+  };
 }
 
 export async function logout() {
-  const refresh_token = getRefreshToken();
-  if (refresh_token) {
-    await apiFetch("/auth/logout", {
-      method: "POST",
-      body: JSON.stringify({ refresh_token }),
-    }).catch(() => {});
-  }
+  await insforge.auth.signOut();
   clearTokens();
 }
 
@@ -189,19 +200,39 @@ export interface UserProfile {
 }
 
 export async function fetchMe(): Promise<UserProfile> {
-  return apiFetch<UserProfile>("/auth/me");
+  const { data: { user }, error } = await insforge.auth.getUser();
+  if (error || !user) throw new Error("Not logged in");
+
+  const { data: profile } = await insforge.from('profiles').select('full_name').eq('id', user.id).single();
+  
+  return {
+    id: user.id as any,
+    email: user.email!,
+    full_name: profile?.full_name || user.user_metadata?.full_name || "User",
+    is_active: true
+  };
 }
 
 // ---------- Email endpoints ----------
 export async function generateEmail(prompt: string) {
-  return apiFetch<{ subject: string; body: string }>("/emails/generate", {
-    method: "POST",
-    body: JSON.stringify({ prompt }),
+  // We'll call a Next.js API route that securely calls the AI
+  const token = getToken();
+  const res = await fetch('/api/email/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ prompt })
   });
+  if (!res.ok) throw new Error('AI generation failed');
+  return res.json();
 }
 
 export async function getEmails() {
-  return apiFetch<{ emails: unknown[] }>("/emails/");
+  const { data, error } = await insforge.from('email').select('*').order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return { emails: data || [] };
 }
 
 // ---------- Speech / Voice endpoints ----------
@@ -209,11 +240,14 @@ export async function transcribeAudio(file: File) {
   const formData = new FormData();
   formData.append("file", file);
   const token = getToken();
-  const res = await fetch(`${API_BASE}/speech/transcribe`, {
+  
+  // Call Next.js API route instead of external backend
+  const res = await fetch('/api/speech/transcribe', {
     method: "POST",
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: formData,
   });
+  
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Transcription failed" }));
     throw new Error(err.detail || "Transcription failed");
@@ -247,10 +281,37 @@ export interface DashboardStats {
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  return apiFetch<DashboardStats>("/dashboard/stats");
+  const { data: user } = await insforge.auth.getUser();
+  if (!user.user) throw new Error("Not logged in");
+  
+  const { count: draftCount } = await insforge.from('email').select('*', { count: 'exact', head: true }).eq('status', 'draft');
+  const { count: conversationsCount } = await insforge.from('conversation').select('*', { count: 'exact', head: true });
+  const { count: emailsCount } = await insforge.from('email').select('*', { count: 'exact', head: true });
+
+  const { data: profile } = await insforge.from('profiles').select('full_name').eq('id', user.user.id).single();
+
+  return {
+    stats: {
+      transcriptions: 0,
+      transcriptions_change: "+0% from last month",
+      emails_sent: emailsCount || 0,
+      emails_sent_change: "+0% from last month",
+      conversations: conversationsCount || 0,
+      conversations_change: "+0% from last month",
+      success_rate: 100,
+      success_rate_label: "API Uptime"
+    },
+    recent_activity: [],
+    user: {
+      name: profile?.full_name || user.user.user_metadata?.full_name || "User",
+      draft_count: draftCount || 0
+    }
+  };
 }
 
 // ---------- Conversation endpoints ----------
 export async function getConversations() {
-  return apiFetch<Array<{ id: string; title: string; created_at: string }>>("/conversations/");
+  const { data, error } = await insforge.from('conversation').select('id, title, created_at').order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return data || [];
 }
