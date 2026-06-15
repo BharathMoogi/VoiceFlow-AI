@@ -35,6 +35,9 @@ class Settings(BaseSettings):
                 self.DATABASE_URL = self.DATABASE_URL.replace(
                     "postgresql://", "postgresql+asyncpg://"
                 )
+            # Replace sslmode=require with ssl=require for asyncpg compatibility
+            if "sslmode=require" in self.DATABASE_URL:
+                self.DATABASE_URL = self.DATABASE_URL.replace("sslmode=require", "ssl=require")
         return self
 
     # JWT Settings

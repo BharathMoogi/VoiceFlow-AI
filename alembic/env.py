@@ -45,8 +45,8 @@ config = context.config
 sync_db_url = settings.DATABASE_URL.replace(
     "postgresql+asyncpg://", "postgresql://"
 ).replace("%", "%%")
-# asyncpg uses ?ssl=true but psycopg2 (Alembic) needs ?sslmode=require
-sync_db_url = sync_db_url.replace("?ssl=true", "?sslmode=require")
+# asyncpg uses ?ssl=require or ?ssl=true but psycopg2 (Alembic) needs ?sslmode=require
+sync_db_url = sync_db_url.replace("?ssl=true", "?sslmode=require").replace("?ssl=require", "?sslmode=require")
 # If using SQLite with the async aiosqlite driver, switch to the sync driver
 if sync_db_url.startswith("sqlite+aiosqlite://"):
     sync_db_url = sync_db_url.replace("sqlite+aiosqlite://", "sqlite://")

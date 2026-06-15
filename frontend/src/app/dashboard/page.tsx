@@ -14,6 +14,9 @@ import {
   Zap,
   Loader2,
   AlertCircle,
+  Users,
+  PhoneCall,
+  Megaphone,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
@@ -139,31 +142,31 @@ export default function DashboardPage() {
 
   const statCards = [
     {
-      label: "Transcriptions",
+      label: "Contacts Directory",
       value: stats.transcriptions.toLocaleString(),
       change: stats.transcriptions_change,
-      icon: Mic,
+      icon: Users,
       color: "text-indigo-400",
       bg: "bg-indigo-500/10 border-indigo-500/20",
     },
     {
-      label: "Emails Sent",
+      label: "Active Campaigns",
       value: stats.emails_sent.toLocaleString(),
       change: stats.emails_sent_change,
-      icon: Mail,
+      icon: Megaphone,
       color: "text-emerald-400",
       bg: "bg-emerald-500/10 border-emerald-500/20",
     },
     {
-      label: "Conversations",
+      label: "Dialed Calls",
       value: stats.conversations.toLocaleString(),
       change: stats.conversations_change,
-      icon: MessageSquare,
+      icon: PhoneCall,
       color: "text-violet-400",
       bg: "bg-violet-500/10 border-violet-500/20",
     },
     {
-      label: "Success Rate",
+      label: "Call Success Rate",
       value: `${stats.success_rate}%`,
       change: stats.success_rate_label,
       icon: TrendingUp,

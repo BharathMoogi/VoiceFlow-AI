@@ -14,6 +14,11 @@ import {
   ChevronRight,
   Zap,
   User,
+  Users,
+  PhoneCall,
+  Megaphone,
+  Sliders,
+  BarChart3,
 } from "lucide-react";
 import { logout, getUserInfo, isLoggedIn, fetchMe, saveUserInfo } from "@/lib/api";
 
@@ -22,6 +27,31 @@ const navItems = [
     label: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    label: "Contacts",
+    href: "/dashboard/contacts",
+    icon: Users,
+  },
+  {
+    label: "Agent Configs",
+    href: "/dashboard/agent-configs",
+    icon: Sliders,
+  },
+  {
+    label: "Campaigns",
+    href: "/dashboard/campaigns",
+    icon: Megaphone,
+  },
+  {
+    label: "Call History",
+    href: "/dashboard/call-logs",
+    icon: PhoneCall,
+  },
+  {
+    label: "Analytics",
+    href: "/dashboard/analytics",
+    icon: BarChart3,
   },
   {
     label: "Conversations",
