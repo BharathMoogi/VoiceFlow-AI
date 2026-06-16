@@ -138,6 +138,13 @@ export async function fetchMe(redirectOnFailure = false): Promise<UserProfile> {
   };
 }
 
+export async function updateProfile(full_name: string) {
+  const { data, error } = await insforge.auth.updateUser({ data: { full_name } });
+  if (error) throw new Error(error.message);
+  saveUserInfo(full_name, data.user.email || '');
+  return data;
+}
+
 // ---------- Email endpoints ----------
 export async function generateEmail(prompt: string): Promise<{ subject: string; body: string }> {
   // Call InsForge AI directly from the browser via the /insforge-proxy rewrite.

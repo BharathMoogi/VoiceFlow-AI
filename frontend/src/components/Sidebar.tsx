@@ -20,8 +20,11 @@ import {
   Megaphone,
   Sliders,
   BarChart3,
+  Edit2,
+  Check,
+  X
 } from "lucide-react";
-import { logout, getUserInfo, isLoggedIn, fetchMe, saveUserInfo } from "@/lib/api";
+import { logout, getUserInfo, isLoggedIn, fetchMe, saveUserInfo, updateProfile } from "@/lib/api";
 
 const navItems = [
   {
@@ -82,6 +85,9 @@ export const Sidebar: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [userInfo, setUserInfo] = useState({ name: "User", email: "" });
   const [loggingOut, setLoggingOut] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState("");
+  const [isSavingName, setIsSavingName] = useState(false);
 
   // Load user info from localStorage, then refresh from API
   useEffect(() => {
@@ -111,6 +117,34 @@ export const Sidebar: React.FC = () => {
       // ignore errors during logout
     }
     router.push("/login");
+  };
+
+  const handleSaveName = async () => {
+    if (!editNameValue.trim() || editNameValue === userInfo.name) {
+      setIsEditingName(false);
+      return;
+    }
+    setIsSavingName(true);
+    try {
+      await updateProfile(editNameValue);
+      setUserInfo({ ...userInfo, name: editNameValue });
+      setIsEditingName(false);
+    } catch (error) {
+      console.error("Failed to update profile name:", error);
+      // fallback to old name
+      setEditNameValue(userInfo.name);
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveName();
+    } else if (e.key === 'Escape') {
+      setIsEditingName(false);
+      setEditNameValue(userInfo.name);
+    }
   };
 
   return (
@@ -196,9 +230,42 @@ export const Sidebar: React.FC = () => {
             <User className="h-3.5 w-3.5 text-white" />
           </div>
           {!collapsed && (
-            <div className="overflow-hidden">
-              <p className="text-xs font-semibold text-zinc-200 truncate">{userInfo.name}</p>
-              <p className="text-[10px] text-zinc-500 truncate">{userInfo.email}</p>
+            <div className="overflow-hidden flex-1 group/profile flex items-center justify-between pr-1">
+              <div className="overflow-hidden flex-1">
+                {isEditingName ? (
+                  <div className="flex items-center gap-1">
+                    <input
+                      autoFocus
+                      type="text"
+                      className="text-xs font-semibold text-zinc-200 bg-zinc-800 border border-zinc-600 rounded px-1 py-0.5 w-full focus:outline-none focus:border-indigo-500"
+                      value={editNameValue}
+                      onChange={(e) => setEditNameValue(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      disabled={isSavingName}
+                    />
+                    <button onClick={handleSaveName} disabled={isSavingName} className="text-emerald-400 hover:text-emerald-300">
+                      <Check className="h-3.5 w-3.5" />
+                    </button>
+                    <button onClick={() => { setIsEditingName(false); setEditNameValue(userInfo.name); }} disabled={isSavingName} className="text-rose-400 hover:text-rose-300">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-zinc-200 truncate">{userInfo.name}</p>
+                      <button 
+                        onClick={() => { setEditNameValue(userInfo.name); setIsEditingName(true); }}
+                        className="opacity-0 group-hover/profile:opacity-100 transition-opacity text-zinc-500 hover:text-zinc-300 ml-2"
+                        aria-label="Edit profile name"
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 truncate">{userInfo.email}</p>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>
