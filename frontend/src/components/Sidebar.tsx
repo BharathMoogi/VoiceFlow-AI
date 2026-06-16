@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
@@ -130,8 +131,13 @@ export const Sidebar: React.FC = () => {
 
       {/* Logo */}
       <div className={`flex items-center gap-3 p-4 border-b border-zinc-800/60 ${collapsed ? "justify-center" : ""}`}>
-        <div className="flex-shrink-0 p-2 bg-indigo-600/20 border border-indigo-500/30 rounded-xl">
-          <Zap className="h-5 w-5 text-indigo-400" />
+        <div className="flex-shrink-0 relative h-10 w-10">
+          <Image 
+            src="/logo.png" 
+            alt="VoiceFlow-AI Logo" 
+            fill 
+            className="object-contain"
+          />
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
