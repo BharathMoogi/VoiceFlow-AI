@@ -225,15 +225,20 @@ export async function sendEmail(emailData: EmailDraft): Promise<void> {
   }
   const user = userResult.data.user;
 
-  // 1. Send transactional email via InsForge SMTP/Email service
-  const { error: sendError } = await insforge.emails.send({
-    to: emailData.recipient,
-    subject: emailData.subject,
-    html: emailData.body.replace(/\n/g, '<br/>')
+  // 1. Send transactional email via Resend (through our Next.js API route)
+  const res = await fetch('/api/email/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      to: emailData.recipient,
+      subject: emailData.subject,
+      html: emailData.body.replace(/\n/g, '<br/>'),
+    }),
   });
 
-  if (sendError) {
-    throw new Error(sendError.message || "Failed to send email via SMTP");
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Failed to send email' }));
+    throw new Error(err.error || 'Failed to send email');
   }
 
   // 2. Log in the database as status='sent'
