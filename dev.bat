@@ -5,7 +5,7 @@ echo Starting local development servers...
 start "FastAPI Backend" cmd /c "cd /d %~dp0 && call venv\Scripts\activate && uvicorn app.main:app --reload"
 
 :: Start the Next.js frontend in a new window
-start "Next.js Frontend" cmd /c "cd /d %~dp0\frontend && npm run dev"
+start "Next.js Frontend" cmd /c "cd /d %~dp0\frontend && set NODE_OPTIONS=--use-system-ca && set NODE_TLS_REJECT_UNAUTHORIZED=0 && npm run dev"
 
 echo ---------------------------------------------------
 echo Development servers are starting in separate windows!

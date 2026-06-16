@@ -85,7 +85,9 @@ export const Sidebar: React.FC = () => {
   // Load user info from localStorage, then refresh from API
   useEffect(() => {
     const stored = getUserInfo();
-    setUserInfo(stored);
+    Promise.resolve().then(() => {
+      setUserInfo(stored);
+    });
 
     if (isLoggedIn()) {
       fetchMe()

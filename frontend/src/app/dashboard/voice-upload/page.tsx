@@ -1,163 +1,165 @@
 "use client";
 
-import React, {
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
-} from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
-  Upload,
-  Mic,
-  Square,
-  FileAudio,
-  CheckCircle,
-  X,
-  Loader2,
-  Mail,
-  Wand2,
-  AlertCircle,
-  RotateCcw,
-  Save,
-  Send,
-  Volume2,
+  Upload, Mic, Square, FileAudio, CheckCircle,
+  Loader2, Mail, Wand2, AlertCircle, RotateCcw, Save, Send, Volume2,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/UI/Card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
-import { generateEmail } from "@/lib/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Stage = "idle" | "recording" | "transcribing" | "generating" | "done" | "error";
-
 const PIPELINE_STAGES: { key: Stage; label: string }[] = [
-  { key: "recording",    label: "Recording"       },
-  { key: "transcribing", label: "Transcribing"    },
-  { key: "generating",   label: "Generating Email"},
-  { key: "done",         label: "Complete"        },
+  { key: "recording",    label: "Recording"        },
+  { key: "transcribing", label: "Transcribing"     },
+  { key: "generating",   label: "Generating Email" },
+  { key: "done",         label: "Complete"         },
 ];
-
-const MAX_RECORDING_SECONDS = 120;
-const WAVEFORM_BARS = 36;
+const MAX_SECS   = 120;
+const BARS       = 36;
 const fmt = (s: number) =>
   `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-// ── Web Speech API types ───────────────────────────────────────────────────────
 declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  interface Window { SpeechRecognition: any; webkitSpeechRecognition: any; }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+async function callTranscribeAPI(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch("/api/speech/transcribe", { method: "POST", body: formData });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Transcription failed" }));
+    throw new Error(err.detail || "Transcription failed");
   }
+  const data = await res.json();
+  return data.text || data.transcript || "";
+}
+
+async function callEmailAPI(prompt: string): Promise<{ subject: string; body: string }> {
+  const res = await fetch("/api/email/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: "Generation failed" }));
+    throw new Error(err.error || err.detail || "Email generation failed");
+  }
+  return res.json();
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export default function VoiceUploadPage() {
-  // Pipeline
-  const [stage, setStage] = useState<Stage>("idle");
-  const [errorMsg, setErrorMsg] = useState("");
+  // Pipeline state
+  const [stage, setStage]           = useState<Stage>("idle");
+  const [errorStage, setErrorStage] = useState<Stage | null>(null);
+  const [errorMsg, setErrorMsg]     = useState("");
   const [transcript, setTranscript] = useState("");
-  const [liveTranscript, setLiveTranscript] = useState(""); // interim during recording
+  const [liveText, setLiveText]     = useState("");   // interim from SpeechRecognition
   const [emailSubject, setEmailSubject] = useState("");
-  const [emailBody, setEmailBody] = useState("");
-  const [isSaved, setIsSaved] = useState(false);
+  const [emailBody, setEmailBody]       = useState("");
+  const [isSaved, setIsSaved]           = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
-  const [isSending, setIsSending] = useState(false);
+  const [isSending, setIsSending]       = useState(false);
 
-  // File upload
-  const [audioFile, setAudioFile] = useState<File | null>(null);
+  // File state
+  const [audioFile, setAudioFile]   = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Recording
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingSeconds, setRecordingSeconds] = useState(0);
-  const [hasSpeechSupport, setHasSpeechSupport] = useState(true);
+  // Recording state
+  const [isRecording, setIsRecording]       = useState(false);
+  const [recordingSecs, setRecordingSecs]   = useState(0);
+  const [hasSpeechAPI, setHasSpeechAPI]     = useState(true);
 
   // Waveform
   const [barHeights, setBarHeights] = useState<number[]>(
-    Array.from({ length: WAVEFORM_BARS }, (_, i) => 15 + (i % 6) * 7)
+    Array.from({ length: BARS }, (_, i) => 15 + (i % 6) * 7)
   );
 
   // Refs
-  const recognitionRef = useRef<any>(null);
-  const finalTranscriptRef = useRef("");
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const audioStreamRef = useRef<MediaStream | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const animFrameRef = useRef<number>(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef   = useRef<any>(null);
+  const finalRef         = useRef("");           // accumulated final transcript from SpeechRecognition
+  const speechFailedRef  = useRef(false);        // true when SpeechRecognition hit "network"
+  const mediaRecRef      = useRef<MediaRecorder | null>(null);
+  const audioChunksRef   = useRef<Blob[]>([]);
+  const streamRef        = useRef<MediaStream | null>(null);
+  const analyserRef      = useRef<AnalyserNode | null>(null);
+  const audioCtxRef      = useRef<AudioContext | null>(null);
+  const animRef          = useRef<number>(0);
+  const timerRef         = useRef<NodeJS.Timeout | null>(null);
 
-  // Detect speech recognition support on mount
   useEffect(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    setHasSpeechSupport(!!SR);
-    return () => stopEverything();
+    Promise.resolve().then(() => {
+      setHasSpeechAPI(!!SR);
+    });
+    return () => teardown();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Visualizer ───────────────────────────────────────────────────────────────
-  const startVisualizer = (stream: MediaStream) => {
+  const startViz = (stream: MediaStream) => {
     try {
       const ctx = new AudioContext();
       audioCtxRef.current = ctx;
-      const source = ctx.createMediaStreamSource(stream);
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 128;
-      source.connect(analyser);
-      analyserRef.current = analyser;
-      const data = new Uint8Array(analyser.frequencyBinCount);
+      const src = ctx.createMediaStreamSource(stream);
+      const an = ctx.createAnalyser();
+      an.fftSize = 128;
+      src.connect(an);
+      analyserRef.current = an;
+      const data = new Uint8Array(an.frequencyBinCount);
       const draw = () => {
-        analyser.getByteFrequencyData(data);
-        setBarHeights(
-          Array.from({ length: WAVEFORM_BARS }, (_, i) => {
-            const idx = Math.floor((i / WAVEFORM_BARS) * data.length);
-            return Math.max(8, (data[idx] / 255) * 100);
-          })
-        );
-        animFrameRef.current = requestAnimationFrame(draw);
+        an.getByteFrequencyData(data);
+        setBarHeights(Array.from({ length: BARS }, (_, i) => {
+          const v = data[Math.floor((i / BARS) * data.length)] / 255;
+          return Math.max(8, v * 100);
+        }));
+        animRef.current = requestAnimationFrame(draw);
       };
       draw();
     } catch { /* no AudioContext */ }
   };
 
-  const stopVisualizer = () => {
-    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+  function stopViz() {
+    if (animRef.current) cancelAnimationFrame(animRef.current);
     audioCtxRef.current?.close().catch(() => {});
     audioCtxRef.current = null;
     analyserRef.current = null;
-    setBarHeights(Array.from({ length: WAVEFORM_BARS }, (_, i) => 15 + (i % 6) * 7));
-  };
+    setBarHeights(Array.from({ length: BARS }, (_, i) => 15 + (i % 6) * 7));
+  }
 
-  const stopEverything = () => {
+  function teardown() {
     if (timerRef.current) clearInterval(timerRef.current);
-    audioStreamRef.current?.getTracks().forEach((t) => t.stop());
-    audioStreamRef.current = null;
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
     recognitionRef.current?.stop();
-    stopVisualizer();
-    if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
-  };
+    stopViz();
+  }
 
-  // ── Pipeline: transcript → email ─────────────────────────────────────────────
+  // ── Email pipeline ────────────────────────────────────────────────────────────
   const runEmailPipeline = async (text: string) => {
     if (!text.trim()) {
       setErrorMsg("No speech was detected. Please speak clearly and try again.");
+      setErrorStage("recording");
       setStage("error");
       return;
     }
     setTranscript(text);
     setStage("generating");
     try {
-      const result = await generateEmail(text);
+      const result = await callEmailAPI(text);
       setEmailSubject(result.subject || "");
       setEmailBody(result.body || "");
       setStage("done");
-    } catch (err: any) {
-      setErrorMsg(err.message || "Email generation failed. Please try again.");
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      setErrorMsg(err.message || "Email generation failed.");
+      setErrorStage("generating");
       setStage("error");
     }
   };
@@ -166,114 +168,102 @@ export default function VoiceUploadPage() {
   const runFilePipeline = async (file: File) => {
     setAudioFile(file);
     setStage("transcribing");
-    setErrorMsg("");
-    setTranscript("");
-    setEmailSubject("");
-    setEmailBody("");
-    setIsSaved(false);
-    setLiveTranscript("");
-    finalTranscriptRef.current = "";
-
+    setErrorMsg(""); setErrorStage(null); setTranscript(""); setEmailSubject(""); setEmailBody("");
+    setIsSaved(false); setLiveText("");
+    finalRef.current = "";
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-      const res = await fetch("/api/speech/transcribe", {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: formData,
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ detail: "Transcription failed" }));
-        throw new Error(err.detail || "Transcription failed");
-      }
-      const data = await res.json();
-      const text = data.text || data.transcript || "";
+      const text = await callTranscribeAPI(file);
       await runEmailPipeline(text);
-    } catch (err: any) {
-      setErrorMsg(err.message || "Transcription failed. Please try again.");
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      setErrorMsg(err.message || "Transcription failed.");
+      setErrorStage("transcribing");
       setStage("error");
     }
   };
 
-  // ── Live recording with SpeechRecognition ─────────────────────────────────────
+  // ── Live recording ────────────────────────────────────────────────────────────
   const startRecording = async () => {
-    setErrorMsg("");
-    setLiveTranscript("");
-    setTranscript("");
-    setEmailSubject("");
-    setEmailBody("");
-    setIsSaved(false);
-    finalTranscriptRef.current = "";
+    setErrorMsg(""); setLiveText(""); setTranscript("");
+    setEmailSubject(""); setEmailBody(""); setIsSaved(false);
+    finalRef.current = ""; speechFailedRef.current = false;
+    audioChunksRef.current = [];
 
-    // Get mic stream for visualizer
+    // 1 — Get mic stream
+    let stream: MediaStream;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioStreamRef.current = stream;
-      startVisualizer(stream);
-    } catch (err: any) {
-      if (err.name === "NotAllowedError") {
-        setErrorMsg("Microphone access denied. Allow mic access in your browser and try again.");
-        setStage("error");
-      } else {
-        setErrorMsg(err.message || "Could not access microphone.");
-        setStage("error");
-      }
-      return;
-    }
-
-    // Start Web Speech API recognition
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      setErrorMsg("Your browser doesn't support speech recognition. Try Chrome or Edge.");
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+      setErrorMsg(
+        err.name === "NotAllowedError"
+          ? "Microphone access denied. Allow mic access and try again."
+          : err.message || "Could not access microphone."
+      );
+      setErrorStage("recording");
       setStage("error");
-      stopEverything();
       return;
     }
+    streamRef.current = stream;
+    startViz(stream);
 
-    const recognition = new SR();
-    recognitionRef.current = recognition;
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
+    // 2 — MediaRecorder (always runs — used as fallback if SpeechRecognition fails)
+    const mime = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : MediaRecorder.isTypeSupported("audio/webm")
+      ? "audio/webm"
+      : "audio/ogg";
 
-    recognition.onresult = (event: any) => {
-      let interim = "";
-      let final = finalTranscriptRef.current;
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) {
-          final += result[0].transcript + " ";
-          finalTranscriptRef.current = final;
-        } else {
-          interim += result[0].transcript;
+    const recorder = new MediaRecorder(stream, { mimeType: mime });
+    mediaRecRef.current = recorder;
+    recorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+    recorder.start(100);
+
+    // 3 — SpeechRecognition (primary path)
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SR) {
+      const recognition = new SR();
+      recognitionRef.current = recognition;
+      recognition.continuous     = true;
+      recognition.interimResults = true;
+      recognition.lang           = "en-US";
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recognition.onresult = (event: any) => {
+        let interim = "";
+        let final   = finalRef.current;
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            final += event.results[i][0].transcript + " ";
+            finalRef.current = final;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
         }
-      }
-      setLiveTranscript(final + interim);
-    };
+        setLiveText(final + interim);
+      };
 
-    recognition.onerror = (event: any) => {
-      if (event.error !== "no-speech" && event.error !== "aborted") {
-        console.error("SpeechRecognition error:", event.error);
-      }
-    };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recognition.onerror = (event: any) => {
+        if (event.error === "network") {
+          // Google's speech server unreachable — mark for fallback
+          speechFailedRef.current = true;
+          console.warn("SpeechRecognition network error — will fall back to Gemini API after recording stops.");
+        } else if (event.error !== "no-speech" && event.error !== "aborted") {
+          console.error("SpeechRecognition error:", event.error);
+        }
+      };
 
-    recognition.onend = () => {
-      // Recognition ended (user stopped or timed out)
-      // Don't auto-process here — we do it in stopRecording
-    };
+      recognition.start();
+    } else {
+      speechFailedRef.current = true; // no SpeechRecognition → always use fallback
+    }
 
-    recognition.start();
     setIsRecording(true);
     setStage("recording");
-    setRecordingSeconds(0);
+    setRecordingSecs(0);
 
     timerRef.current = setInterval(() => {
-      setRecordingSeconds((s) => {
-        if (s + 1 >= MAX_RECORDING_SECONDS) {
-          stopRecording();
-          return s;
-        }
+      setRecordingSecs(s => {
+        if (s + 1 >= MAX_SECS) { stopRecording(); return s; }
         return s + 1;
       });
     }, 1000);
@@ -283,33 +273,59 @@ export default function VoiceUploadPage() {
     if (timerRef.current) clearInterval(timerRef.current);
     setIsRecording(false);
     recognitionRef.current?.stop();
-    stopVisualizer();
-    audioStreamRef.current?.getTracks().forEach((t) => t.stop());
-    audioStreamRef.current = null;
+    stopViz();
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
 
-    // Move to transcribing→generating with the captured text
-    const captured = finalTranscriptRef.current.trim() || liveTranscript.trim();
-    setStage("transcribing");
-    // Brief "transcribing" display then go straight to generating
-    setTimeout(() => runEmailPipeline(captured), 600);
+    // Stop MediaRecorder and wait for final chunk
+    const rec = mediaRecRef.current;
+    if (rec && rec.state !== "inactive") {
+      rec.onstop = async () => {
+        const capturedText = finalRef.current.trim() || liveText.trim();
+
+        if (!speechFailedRef.current && capturedText) {
+          // SpeechRecognition succeeded — use its text
+          setStage("transcribing");
+          setTimeout(() => runEmailPipeline(capturedText), 400);
+        } else {
+          // Fallback: send audio blob to Gemini transcription route
+          setLiveText("");
+          setStage("transcribing");
+          try {
+            const blob = new Blob(audioChunksRef.current, { type: rec.mimeType });
+            if (blob.size === 0) {
+              throw new Error("No audio was captured. Please try again.");
+            }
+            const file = new File([blob], `recording-${Date.now()}.webm`, { type: rec.mimeType });
+            setAudioFile(file);
+            const text = await callTranscribeAPI(file);
+            await runEmailPipeline(text);
+          } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+            setErrorMsg(err.message || "Transcription failed.");
+            setErrorStage("transcribing");
+            setStage("error");
+          }
+        }
+      };
+      rec.stop();
+    } else {
+      // MediaRecorder already stopped (shouldn't happen, but handle gracefully)
+      const capturedText = finalRef.current.trim() || liveText.trim();
+      setStage("transcribing");
+      setTimeout(() => runEmailPipeline(capturedText), 400);
+    }
   };
 
-  const toggleRecording = () => {
-    if (isRecording) stopRecording();
-    else startRecording();
-  };
+  const toggleRecording = () => { if (isRecording) stopRecording(); else startRecording(); };
 
   // ── Drag & Drop ───────────────────────────────────────────────────────────────
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
+  const handleDragOver  = useCallback((e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); }, []);
   const handleDragLeave = useCallback(() => setIsDragging(false), []);
   const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
+    e.preventDefault(); setIsDragging(false);
     const file = e.dataTransfer.files[0];
     if (file) runFilePipeline(file);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -318,25 +334,18 @@ export default function VoiceUploadPage() {
 
   // ── Reset ─────────────────────────────────────────────────────────────────────
   const handleReset = () => {
-    stopEverything();
-    setStage("idle");
-    setAudioFile(null);
-    setTranscript("");
-    setLiveTranscript("");
-    setEmailSubject("");
-    setEmailBody("");
-    setErrorMsg("");
-    setIsSaved(false);
-    setIsRecording(false);
-    setRecordingSeconds(0);
-    finalTranscriptRef.current = "";
+    teardown();
+    setStage("idle"); setErrorStage(null); setAudioFile(null); setTranscript(""); setLiveText("");
+    setEmailSubject(""); setEmailBody(""); setErrorMsg(""); setIsSaved(false);
+    setIsRecording(false); setRecordingSecs(0);
+    finalRef.current = ""; audioChunksRef.current = [];
   };
 
   // ── Derived ───────────────────────────────────────────────────────────────────
-  const currentStageIndex = PIPELINE_STAGES.findIndex((s) => s.key === stage);
-  const isProcessing = ["transcribing", "generating"].includes(stage);
-  const progress = (recordingSeconds / MAX_RECORDING_SECONDS) * 100;
-  const displayTranscript = transcript || liveTranscript;
+  const stageIdx      = PIPELINE_STAGES.findIndex(s => s.key === (stage === "error" ? errorStage : stage));
+  const isProcessing  = ["transcribing", "generating"].includes(stage);
+  const progress      = (recordingSecs / MAX_SECS) * 100;
+  const displayText   = transcript || liveText;
 
   // ── Render ────────────────────────────────────────────────────────────────────
   return (
@@ -353,51 +362,41 @@ export default function VoiceUploadPage() {
         </p>
       </div>
 
-      {/* Progress Stepper */}
+      {/* Stepper */}
       {stage !== "idle" && (
         <Card className="!p-5">
           <div className="flex items-center justify-between">
             {PIPELINE_STAGES.map((s, i) => {
-              const isDone =
-                stage === "done" ||
-                (stage !== "error" && currentStageIndex > i);
-              const isActive =
-                stage !== "error" && stage !== "done" &&
-                PIPELINE_STAGES[currentStageIndex]?.key === s.key;
-              const isErr =
-                stage === "error" && PIPELINE_STAGES[Math.max(0, currentStageIndex)]?.key === s.key;
-
+              const isDone   = stage === "done" || (stageIdx > i);
+              const isActive = stage !== "error" && stage !== "done" && PIPELINE_STAGES[stageIdx]?.key === s.key;
+              const isErr    = stage === "error" && i === stageIdx;
               return (
                 <React.Fragment key={s.key}>
-                  <div className="flex flex-col items-center gap-2 min-w-0">
+                  <div className="flex flex-col items-center gap-2">
                     <div className={`h-9 w-9 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
-                      isErr   ? "bg-red-500/20 border-red-500 text-red-400" :
-                      isDone  ? "bg-emerald-500 border-emerald-500 text-white" :
-                      isActive? "border-indigo-500 bg-indigo-500/10 text-indigo-400" :
-                               "border-zinc-700 bg-transparent text-zinc-600"
+                      isErr    ? "bg-red-500/20 border-red-500 text-red-400" :
+                      isDone   ? "bg-emerald-500 border-emerald-500 text-white" :
+                      isActive ? "border-indigo-500 bg-indigo-500/10 text-indigo-400" :
+                                 "border-zinc-700 bg-transparent text-zinc-600"
                     }`}>
-                      {isErr   ? <AlertCircle className="h-4 w-4" /> :
-                       isDone  ? <CheckCircle  className="h-4 w-4" /> :
-                       isActive? <Loader2 className="h-4 w-4 animate-spin" /> :
-                                 <span className="text-xs font-bold">{i + 1}</span>}
+                      {isErr    ? <AlertCircle className="h-4 w-4" /> :
+                       isDone   ? <CheckCircle  className="h-4 w-4" /> :
+                       isActive ? <Loader2 className="h-4 w-4 animate-spin" /> :
+                                  <span className="text-xs font-bold">{i + 1}</span>}
                     </div>
-                    <span className={`text-xs font-medium text-center ${
-                      isErr   ? "text-red-400"     :
-                      isDone  ? "text-emerald-400" :
-                      isActive? "text-indigo-400"  : "text-zinc-600"
+                    <span className={`text-xs font-medium ${
+                      isErr ? "text-red-400" : isDone ? "text-emerald-400" : isActive ? "text-indigo-400" : "text-zinc-600"
                     }`}>{s.label}</span>
                   </div>
                   {i < PIPELINE_STAGES.length - 1 && (
                     <div className={`flex-1 h-0.5 mx-2 rounded-full transition-all duration-700 ${
-                      stage === "done" || (stage !== "error" && currentStageIndex > i)
-                        ? "bg-emerald-500" : "bg-zinc-800"
+                      stage === "done" || (stageIdx > i) ? "bg-emerald-500" : "bg-zinc-800"
                     }`} />
                   )}
                 </React.Fragment>
               );
             })}
           </div>
-
           {stage === "error" && errorMsg && (
             <div className="mt-4 flex items-start gap-2.5 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
               <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
@@ -407,52 +406,40 @@ export default function VoiceUploadPage() {
         </Card>
       )}
 
-      {/* Browser support warning */}
-      {!hasSpeechSupport && (
+      {/* Browser compat notice */}
+      {!hasSpeechAPI && stage === "idle" && (
         <div className="flex items-center gap-3 p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
           <AlertCircle className="h-4 w-4 text-amber-400 flex-shrink-0" />
           <p className="text-sm text-amber-300">
-            Live recording requires Chrome or Edge. You can still upload audio files below.
+            Live recording works best in Chrome or Edge. Gemini AI will be used for transcription on other browsers.
           </p>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-        {/* ── LEFT: Upload + Record ── */}
+        {/* ── LEFT ── */}
         <div className="space-y-4">
 
-          {/* Drag & Drop */}
+          {/* Drop zone */}
           <Card className="!p-0 overflow-hidden">
             <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
+              onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
               className={`relative p-8 text-center border-2 border-dashed rounded-xl transition-all duration-300 cursor-pointer ${
-                isDragging
-                  ? "border-indigo-500 bg-indigo-500/10 scale-[1.01]"
-                  : isProcessing || isRecording
-                  ? "border-zinc-700 opacity-50 pointer-events-none"
-                  : "border-zinc-800 hover:border-zinc-600 hover:bg-zinc-900/30"
+                isDragging         ? "border-indigo-500 bg-indigo-500/10 scale-[1.01]" :
+                isProcessing || isRecording ? "border-zinc-700 opacity-50 pointer-events-none" :
+                                   "border-zinc-800 hover:border-zinc-600 hover:bg-zinc-900/30"
               }`}
               onClick={() => !(isProcessing || isRecording) && fileInputRef.current?.click()}
               id="drag-drop-zone"
             >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="audio/*,.wav,.mp3,.m4a,.ogg,.webm,.flac"
-                className="hidden"
-                onChange={handleFileChange}
-                id="file-upload-input"
-              />
+              <input ref={fileInputRef} type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg,.webm,.flac"
+                className="hidden" onChange={handleFileChange} id="file-upload-input" />
               <div className="flex flex-col items-center gap-4">
                 <div className={`p-5 rounded-2xl transition-all duration-300 ${
-                  isDragging
-                    ? "bg-indigo-500/20 border border-indigo-500/40"
-                    : "bg-zinc-900/60 border border-zinc-800"
+                  isDragging ? "bg-indigo-500/20 border border-indigo-500/40" : "bg-zinc-900/60 border border-zinc-800"
                 }`}>
-                  <Upload className={`h-8 w-8 transition-colors ${isDragging ? "text-indigo-400" : "text-zinc-500"}`} />
+                  <Upload className={`h-8 w-8 ${isDragging ? "text-indigo-400" : "text-zinc-500"}`} />
                 </div>
                 {audioFile ? (
                   <div>
@@ -474,7 +461,6 @@ export default function VoiceUploadPage() {
             </div>
           </Card>
 
-          {/* Divider */}
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-zinc-800" />
             <span className="text-xs text-zinc-600 font-medium">or record live</span>
@@ -485,22 +471,17 @@ export default function VoiceUploadPage() {
           <Card className="!p-5">
             <div className="flex flex-col items-center gap-4">
 
-              {/* Waveform */}
+              {/* Waveform bars */}
               <div className="w-full flex items-end justify-center gap-px h-14 px-1">
                 {barHeights.map((h, i) => (
                   <div
                     key={i}
                     className={`flex-1 rounded-full transition-all ${
                       isRecording
-                        ? i % 2 === 0
-                          ? "bg-gradient-to-t from-rose-700 to-rose-400"
-                          : "bg-gradient-to-t from-indigo-700 to-indigo-400"
+                        ? i % 2 === 0 ? "bg-gradient-to-t from-rose-700 to-rose-400" : "bg-gradient-to-t from-indigo-700 to-indigo-400"
                         : "bg-zinc-700"
                     }`}
-                    style={{
-                      height: `${h}%`,
-                      transitionDuration: isRecording ? "70ms" : "500ms",
-                    }}
+                    style={{ height: `${h}%`, transitionDuration: isRecording ? "70ms" : "500ms" }}
                   />
                 ))}
               </div>
@@ -511,28 +492,26 @@ export default function VoiceUploadPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-                      <span className="text-sm font-mono font-bold text-rose-400">{fmt(recordingSeconds)}</span>
+                      <span className="text-sm font-mono font-bold text-rose-400">{fmt(recordingSecs)}</span>
                       <span className="text-xs text-zinc-600">recording</span>
                     </div>
-                    <span className="text-xs text-zinc-600">{fmt(MAX_RECORDING_SECONDS)} max</span>
+                    <span className="text-xs text-zinc-600">{fmt(MAX_SECS)} max</span>
                   </div>
                   <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-rose-600 to-pink-400 rounded-full transition-all duration-1000"
-                      style={{ width: `${progress}%` }}
-                    />
+                    <div className="h-full bg-gradient-to-r from-rose-600 to-pink-400 rounded-full transition-all duration-1000"
+                      style={{ width: `${progress}%` }} />
                   </div>
                 </div>
               )}
 
-              {/* Live transcript preview during recording */}
-              {isRecording && liveTranscript && (
+              {/* Live transcript preview */}
+              {isRecording && liveText && (
                 <div className="w-full p-3 rounded-lg bg-zinc-900/60 border border-zinc-800">
                   <p className="text-xs text-zinc-500 mb-1 flex items-center gap-1">
                     <Volume2 className="h-3 w-3" /> Live transcript
                   </p>
                   <p className="text-xs text-zinc-300 leading-relaxed line-clamp-3">
-                    {liveTranscript}
+                    {liveText}
                     <span className="inline-block w-0.5 h-3 bg-indigo-400 ml-0.5 animate-pulse align-middle" />
                   </p>
                 </div>
@@ -542,7 +521,7 @@ export default function VoiceUploadPage() {
               <button
                 id="record-btn"
                 onClick={toggleRecording}
-                disabled={isProcessing || !hasSpeechSupport}
+                disabled={isProcessing}
                 className={`flex items-center gap-2.5 px-6 py-3 rounded-full text-sm font-semibold transition-all duration-200 shadow-lg disabled:opacity-40 disabled:pointer-events-none ${
                   isRecording
                     ? "bg-rose-600 hover:bg-rose-500 text-white shadow-rose-500/30 scale-105 ring-4 ring-rose-500/20"
@@ -557,27 +536,23 @@ export default function VoiceUploadPage() {
               <p className="text-xs text-zinc-600 text-center">
                 {isRecording
                   ? "Click stop when done — auto-stops at 2 minutes"
-                  : hasSpeechSupport
-                  ? "Click to capture your voice (up to 2 minutes)"
-                  : "Use Chrome or Edge for live recording"}
+                  : "Click to capture your voice (up to 2 minutes)"}
               </p>
             </div>
           </Card>
 
-          {/* Reset */}
           {stage !== "idle" && (
             <Button variant="outline" onClick={handleReset} className="w-full" id="reset-btn">
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Start Over
+              <RotateCcw className="h-4 w-4 mr-2" />Start Over
             </Button>
           )}
         </div>
 
-        {/* ── RIGHT: Output ── */}
+        {/* ── RIGHT ── */}
         <div className="space-y-4">
 
-          {/* Live / final transcript */}
-          {(stage === "recording" || stage === "transcribing" || stage === "generating" || stage === "done") && displayTranscript && (
+          {/* Transcript card */}
+          {(stage === "recording" || stage === "transcribing" || stage === "generating" || stage === "done") && displayText && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -587,23 +562,22 @@ export default function VoiceUploadPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                  {displayTranscript}
+                  {displayText}
                   {stage === "recording" && (
                     <span className="inline-block w-0.5 h-4 bg-indigo-400 ml-0.5 animate-pulse align-middle" />
                   )}
                 </p>
                 {stage === "generating" && (
                   <p className="text-xs text-zinc-500 mt-2 flex items-center gap-1.5">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Generating email from transcript…
+                    <Loader2 className="h-3 w-3 animate-spin" />Generating email…
                   </p>
                 )}
               </CardContent>
             </Card>
           )}
 
-          {/* Transcribing shimmer (file uploads) */}
-          {stage === "transcribing" && !displayTranscript && (
+          {/* Shimmer (file transcribing with no text yet) */}
+          {stage === "transcribing" && !displayText && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm flex items-center gap-2">
@@ -617,8 +591,7 @@ export default function VoiceUploadPage() {
                     <div key={i} className="shimmer rounded h-3" style={{ width: `${w}%` }} />
                   ))}
                   <p className="text-xs text-zinc-500 mt-2 flex items-center gap-1.5">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Transcribing audio…
+                    <Loader2 className="h-3 w-3 animate-spin" />Transcribing audio…
                   </p>
                 </div>
               </CardContent>
@@ -631,68 +604,44 @@ export default function VoiceUploadPage() {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-emerald-400" />
-                    Generated Email
+                    <Mail className="h-4 w-4 text-emerald-400" />Generated Email
                   </CardTitle>
                   <div className="flex items-center gap-1.5">
                     {isSaved
                       ? <><CheckCircle className="h-3.5 w-3.5 text-emerald-400" /><span className="text-[11px] text-emerald-500 font-medium">Saved</span></>
-                      : <><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /><span className="text-[11px] text-emerald-500 font-medium">Ready</span></>
-                    }
+                      : <><span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" /><span className="text-[11px] text-emerald-500 font-medium">Ready</span></>}
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
                   <label className="text-xs text-zinc-500 mb-1.5 block font-medium">Recipient (optional)</label>
-                  <input
-                    value={recipientEmail}
-                    onChange={(e) => setRecipientEmail(e.target.value)}
-                    type="email"
-                    placeholder="recipient@example.com"
+                  <input value={recipientEmail} onChange={e => setRecipientEmail(e.target.value)}
+                    type="email" placeholder="recipient@example.com"
                     className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3.5 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
-                    id="voice-recipient-email"
-                  />
+                    id="voice-recipient-email" />
                 </div>
                 <div>
                   <label className="text-xs text-zinc-500 mb-1.5 block font-medium">Subject</label>
-                  <input
-                    value={emailSubject}
-                    onChange={(e) => setEmailSubject(e.target.value)}
+                  <input value={emailSubject} onChange={e => setEmailSubject(e.target.value)}
                     className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
-                    placeholder="Subject"
-                    id="voice-email-subject"
-                  />
+                    placeholder="Subject" id="voice-email-subject" />
                 </div>
                 <div>
                   <label className="text-xs text-zinc-500 mb-1.5 block font-medium">Body</label>
-                  <textarea
-                    value={emailBody}
-                    onChange={(e) => setEmailBody(e.target.value)}
-                    rows={8}
+                  <textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={8}
                     className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-y font-mono leading-relaxed"
-                    id="voice-email-body"
-                  />
+                    id="voice-email-body" />
                 </div>
                 <div className="flex gap-2 pt-1">
-                  <Button
-                    variant="outline" size="sm" className="flex-1"
-                    id="voice-save-draft-btn"
-                    onClick={() => setIsSaved(true)}
-                    disabled={isSaved}
-                  >
-                    <Save className="h-3.5 w-3.5 mr-1.5" />
-                    {isSaved ? "Draft Saved ✓" : "Save Draft"}
+                  <Button variant="outline" size="sm" className="flex-1" id="voice-save-draft-btn"
+                    onClick={() => setIsSaved(true)} disabled={isSaved}>
+                    <Save className="h-3.5 w-3.5 mr-1.5" />{isSaved ? "Draft Saved ✓" : "Save Draft"}
                   </Button>
-                  <Button
-                    size="sm" className="flex-1"
-                    id="voice-send-btn"
+                  <Button size="sm" className="flex-1" id="voice-send-btn"
                     disabled={isSending || !recipientEmail}
-                    onClick={() => { setIsSending(true); setTimeout(() => setIsSending(false), 2000); }}
-                  >
-                    {isSending
-                      ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                      : <Send className="h-3.5 w-3.5 mr-1.5" />}
+                    onClick={() => { setIsSending(true); setTimeout(() => setIsSending(false), 2000); }}>
+                    {isSending ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
                     {isSending ? "Sending…" : "Send Email"}
                   </Button>
                 </div>
@@ -719,8 +668,8 @@ export default function VoiceUploadPage() {
             </div>
           )}
 
-          {/* Idle placeholder */}
-          {(stage === "idle" || (stage === "recording" && !liveTranscript)) && (
+          {/* Idle / listening placeholder */}
+          {(stage === "idle" || (stage === "recording" && !liveText)) && (
             <div className={`flex flex-col items-center justify-center rounded-2xl border border-dashed p-16 text-center transition-all ${
               stage === "recording" ? "border-rose-500/30 bg-rose-500/5" : "border-zinc-800"
             }`}>

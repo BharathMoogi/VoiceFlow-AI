@@ -3,7 +3,7 @@ import httpx
 import json
 import sys
 
-BASE_URL = "http://127.0.0.1:8001/api/v1"
+BASE_URL = "http://127.0.0.1:8000/api/v1"
 
 async def main():
     async with httpx.AsyncClient(timeout=30.0) as client:

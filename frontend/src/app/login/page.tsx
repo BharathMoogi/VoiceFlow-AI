@@ -6,23 +6,28 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/UI/Button";
 import { Input } from "@/components/UI/Input";
 import { KeyRound, Mail, User, Mic } from "lucide-react";
-import { login, register, saveTokens, fetchMe, saveUserInfo } from "@/lib/api";
+import { login, register, saveTokens, fetchMe, saveUserInfo, verifyEmailOTP } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+  const [activeTab, setActiveTab] = useState<"login" | "signup" | "verify">("login");
   const [isLoading, setIsLoading] = useState(false);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!email || !password || (activeTab === "signup" && !name)) {
+    if (activeTab === "verify" && !otp) {
+      setError("Please enter the verification code.");
+      return;
+    }
+    if (activeTab !== "verify" && (!email || !password || (activeTab === "signup" && !name))) {
       setError("Please fill out all fields.");
       return;
     }
@@ -32,8 +37,11 @@ export default function LoginPage() {
       if (activeTab === "login") {
         const tokens = await login(email, password);
         saveTokens(tokens.access_token, tokens.refresh_token);
-      } else {
+      } else if (activeTab === "signup") {
         const tokens = await register(name, email, password);
+        saveTokens(tokens.access_token, tokens.refresh_token);
+      } else if (activeTab === "verify") {
+        const tokens = await verifyEmailOTP(email, otp);
         saveTokens(tokens.access_token, tokens.refresh_token);
       }
 
@@ -46,8 +54,18 @@ export default function LoginPage() {
       }
 
       router.push("/dashboard");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
+    } catch (err: any) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (
+        msg.toLowerCase().includes("email verification required") ||
+        msg.toLowerCase().includes("otp") ||
+        msg.toLowerCase().includes("verify your email first")
+      ) {
+        setActiveTab("verify");
+        setError("Please enter the verification code sent to your email.");
+      } else {
+        setError(msg || "Something went wrong. Please try again.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -91,12 +109,14 @@ export default function LoginPage() {
             </button>
           </div>
           <CardTitle className="text-xl text-center">
-            {activeTab === "login" ? "Welcome back" : "Create an account"}
+            {activeTab === "login" ? "Welcome back" : activeTab === "signup" ? "Create an account" : "Verify Email"}
           </CardTitle>
           <CardDescription className="text-center">
             {activeTab === "login"
               ? "Sign in to access your dashboard and voice templates."
-              : "Register below to get started with AI email transcription."}
+              : activeTab === "signup"
+              ? "Register below to get started with AI email transcription."
+              : `Enter the code sent to ${email || "your email"}`}
           </CardDescription>
         </CardHeader>
 
@@ -142,26 +162,46 @@ export default function LoginPage() {
               />
             </div>
 
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500 mt-5">
-                <KeyRound className="h-4 w-4" />
+            {activeTab !== "verify" && (
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500 mt-5">
+                  <KeyRound className="h-4 w-4" />
+                </div>
+                <Input
+                  label="Password"
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-9"
+                  disabled={isLoading}
+                />
               </div>
-              <Input
-                label="Password"
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-9"
-                disabled={isLoading}
-              />
-            </div>
+            )}
+
+            {activeTab === "verify" && (
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500 mt-5">
+                  <KeyRound className="h-4 w-4" />
+                </div>
+                <Input
+                  label="Verification Code"
+                  id="otp"
+                  type="text"
+                  placeholder="123456"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  className="pl-9"
+                  disabled={isLoading}
+                />
+              </div>
+            )}
           </CardContent>
 
           <CardFooter className="flex-col space-y-3">
             <Button type="submit" className="w-full" isLoading={isLoading}>
-              {activeTab === "login" ? "Sign In" : "Register"}
+              {activeTab === "login" ? "Sign In" : activeTab === "signup" ? "Register" : "Verify"}
             </Button>
             {activeTab === "login" && (
               <button

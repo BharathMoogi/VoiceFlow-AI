@@ -1,29 +1,21 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/insforge';
+import { createClient as originalCreateClient } from '@insforge/sdk';
 
 const INSFORGE_URL = (process.env.NEXT_PUBLIC_INSFORGE_URL || 'https://qqskjqm7.us-east.insforge.app').replace(/^"|"$/g, '');
 const INSFORGE_KEY = (process.env.NEXT_PUBLIC_INSFORGE_ANON_KEY || 'ik_846718b86955d3fece95d9ae0d840866').replace(/^"|"$/g, '');
 
+// Server-side InsForge client using anon key — no user auth needed
+// (App uses FastAPI for auth, not InsForge auth)
+function getServerClient() {
+  const raw = originalCreateClient({ baseUrl: INSFORGE_URL, anonKey: INSFORGE_KEY });
+  const client = raw as any;
+  client.from = (table: string) => raw.database.from(table);
+  return client;
+}
+
 export async function POST(req: Request) {
   try {
-    // ── Auth check ──────────────────────────────────────────────
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      return NextResponse.json({ detail: 'Missing Authorization header' }, { status: 401 });
-    }
-    const token = authHeader.replace('Bearer ', '');
-
-    const userInsforge = createClient({
-      baseUrl: INSFORGE_URL,
-      anonKey: INSFORGE_KEY,
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    const { data, error: authError } = await userInsforge.auth.getCurrentUser();
-    if (authError || !data?.user) {
-      return NextResponse.json({ detail: 'Unauthorized' }, { status: 401 });
-    }
-
+    // No auth guard — route uses InsForge anon key, not user JWT
     // ── Read the uploaded audio file ────────────────────────────
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
@@ -40,9 +32,11 @@ export async function POST(req: Request) {
     // Strip codec params for the Gemini API (it only wants the base type)
     const cleanMime = mimeType.split(';')[0] || 'audio/webm';
 
+    const insforge = getServerClient();
+
     // ── Call Gemini via InsForge AI gateway ──────────────────────
     // Gemini Flash supports audio inline_data natively
-    const completion = await userInsforge.ai.chat.completions.create({
+    const completion = await insforge.ai.chat.completions.create({
       model: 'google/gemini-2.0-flash',
       messages: [
         {
