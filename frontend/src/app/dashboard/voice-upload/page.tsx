@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
+import { saveEmailDraft, sendEmail } from "@/lib/api";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Stage = "idle" | "recording" | "transcribing" | "generating" | "done" | "error";
@@ -65,6 +66,53 @@ export default function VoiceUploadPage() {
   const [isSaved, setIsSaved]           = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
   const [isSending, setIsSending]       = useState(false);
+  const [isSaving, setIsSaving]         = useState(false);
+  const [sendSuccess, setSendSuccess]   = useState(false);
+  const [saveSuccess, setSaveSuccess]   = useState(false);
+  const [actionError, setActionError]   = useState<string | null>(null);
+
+  const handleSaveDraft = async () => {
+    setActionError(null);
+    setSaveSuccess(false);
+    setIsSaving(true);
+    try {
+      await saveEmailDraft({
+        recipient: recipientEmail,
+        subject: emailSubject,
+        body: emailBody
+      });
+      setIsSaved(true);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err: any) {
+      console.error(err);
+      setActionError(err.message || "Failed to save draft");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSendEmail = async () => {
+    if (!recipientEmail) return;
+    setActionError(null);
+    setSendSuccess(false);
+    setIsSending(true);
+    try {
+      await sendEmail({
+        recipient: recipientEmail,
+        subject: emailSubject,
+        body: emailBody
+      });
+      setIsSaved(true);
+      setSendSuccess(true);
+      setTimeout(() => setSendSuccess(false), 3000);
+    } catch (err: any) {
+      console.error(err);
+      setActionError(err.message || "Failed to send email");
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   // File state
   const [audioFile, setAudioFile]   = useState<File | null>(null);
@@ -170,6 +218,7 @@ export default function VoiceUploadPage() {
     setStage("transcribing");
     setErrorMsg(""); setErrorStage(null); setTranscript(""); setEmailSubject(""); setEmailBody("");
     setIsSaved(false); setLiveText("");
+    setSendSuccess(false); setSaveSuccess(false); setActionError(null);
     finalRef.current = "";
     try {
       const text = await callTranscribeAPI(file);
@@ -185,6 +234,7 @@ export default function VoiceUploadPage() {
   const startRecording = async () => {
     setErrorMsg(""); setLiveText(""); setTranscript("");
     setEmailSubject(""); setEmailBody(""); setIsSaved(false);
+    setSendSuccess(false); setSaveSuccess(false); setActionError(null);
     finalRef.current = ""; speechFailedRef.current = false;
     audioChunksRef.current = [];
 
@@ -338,6 +388,7 @@ export default function VoiceUploadPage() {
     setStage("idle"); setErrorStage(null); setAudioFile(null); setTranscript(""); setLiveText("");
     setEmailSubject(""); setEmailBody(""); setErrorMsg(""); setIsSaved(false);
     setIsRecording(false); setRecordingSecs(0);
+    setSendSuccess(false); setSaveSuccess(false); setActionError(null);
     finalRef.current = ""; audioChunksRef.current = [];
   };
 
@@ -635,18 +686,37 @@ export default function VoiceUploadPage() {
                 </div>
                 <div className="flex gap-2 pt-1">
                   <Button variant="outline" size="sm" className="flex-1" id="voice-save-draft-btn"
-                    onClick={() => setIsSaved(true)} disabled={isSaved}>
-                    <Save className="h-3.5 w-3.5 mr-1.5" />{isSaved ? "Draft Saved ✓" : "Save Draft"}
+                    onClick={handleSaveDraft} disabled={isSaving || isSaved}>
+                    {isSaving ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Save className="h-3.5 w-3.5 mr-1.5" />}
+                    {isSaved ? "Draft Saved ✓" : "Save Draft"}
                   </Button>
                   <Button size="sm" className="flex-1" id="voice-send-btn"
                     disabled={isSending || !recipientEmail}
-                    onClick={() => { setIsSending(true); setTimeout(() => setIsSending(false), 2000); }}>
+                    onClick={handleSendEmail}>
                     {isSending ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Send className="h-3.5 w-3.5 mr-1.5" />}
                     {isSending ? "Sending…" : "Send Email"}
                   </Button>
                 </div>
                 {!recipientEmail && (
                   <p className="text-xs text-zinc-600 text-center">Add a recipient email to enable Send</p>
+                )}
+                {saveSuccess && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+                    <CheckCircle className="h-4 w-4" />
+                    Draft saved successfully!
+                  </div>
+                )}
+                {sendSuccess && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+                    <CheckCircle className="h-4 w-4" />
+                    Email sent successfully!
+                  </div>
+                )}
+                {actionError && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
+                    <AlertCircle className="h-4 w-4" />
+                    {actionError}
+                  </div>
                 )}
               </CardContent>
             </Card>

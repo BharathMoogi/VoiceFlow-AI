@@ -187,6 +187,74 @@ export async function getEmails() {
   return { emails: data || [] };
 }
 
+export interface EmailDraft {
+  recipient: string;
+  subject: string;
+  body: string;
+}
+
+export async function saveEmailDraft(emailData: EmailDraft): Promise<{ id: string }> {
+  const userResult = await insforge.auth.getCurrentUser();
+  if (userResult.error || !userResult.data || !userResult.data.user) {
+    throw new Error("Not authenticated");
+  }
+  const user = userResult.data.user;
+
+  const { data, error } = await insforge
+    .from('email')
+    .insert([
+      {
+        recipient: emailData.recipient,
+        subject: emailData.subject,
+        body: emailData.body,
+        status: 'draft',
+        user_id: user.id,
+      },
+    ])
+    .select('id')
+    .single();
+
+  if (error) throw new Error(error.message);
+  return { id: data.id };
+}
+
+export async function sendEmail(emailData: EmailDraft): Promise<void> {
+  const userResult = await insforge.auth.getCurrentUser();
+  if (userResult.error || !userResult.data || !userResult.data.user) {
+    throw new Error("Not authenticated");
+  }
+  const user = userResult.data.user;
+
+  // 1. Send transactional email via InsForge SMTP/Email service
+  const { error: sendError } = await insforge.emails.send({
+    to: emailData.recipient,
+    subject: emailData.subject,
+    html: emailData.body.replace(/\n/g, '<br/>')
+  });
+
+  if (sendError) {
+    throw new Error(sendError.message || "Failed to send email via SMTP");
+  }
+
+  // 2. Log in the database as status='sent'
+  const { error: dbError } = await insforge
+    .from('email')
+    .insert([
+      {
+        recipient: emailData.recipient,
+        subject: emailData.subject,
+        body: emailData.body,
+        status: 'sent',
+        user_id: user.id,
+      },
+    ]);
+
+  if (dbError) {
+    console.error("Failed to record sent email in database:", dbError);
+  }
+}
+
+
 // ---------- Speech / Voice endpoints ----------
 export async function transcribeAudio(file: File) {
   const formData = new FormData();

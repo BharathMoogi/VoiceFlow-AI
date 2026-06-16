@@ -12,10 +12,13 @@ import {
   Sparkles,
   ChevronDown,
   FileText,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
 import { Input, TextArea } from "@/components/UI/Input";
+import { generateEmail, saveEmailDraft, sendEmail } from "@/lib/api";
 
 const templates = [
   { label: "Follow-up Email", prompt: "Write a professional follow-up email after a business meeting with action items." },
@@ -41,19 +44,24 @@ export default function EmailGeneratorPage() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [sendSuccess, setSendSuccess] = useState(false);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!prompt.trim()) return;
     setIsGenerating(true);
     setGeneratedEmail(null);
-
-    setTimeout(() => {
+    setActionError(null);
+    try {
+      const result = await generateEmail(prompt);
+      setGeneratedEmail(result);
+    } catch (err: any) {
+      console.error(err);
+      setActionError(err.message || "Failed to generate email");
+    } finally {
       setIsGenerating(false);
-      setGeneratedEmail({
-        subject: "Q3 Review – Action Items & Next Steps",
-        body: `Dear [Recipient],\n\nI hope this message finds you well. I'm writing to follow up on our recent discussion and ensure we're aligned on the next steps moving forward.\n\nAs discussed, I wanted to share the key outcomes and action items:\n\n1. Finalize the Q3 performance report by end of week\n2. Schedule a follow-up sync with the stakeholders next Monday\n3. Review and approve the updated project timeline\n\nPlease feel free to review and let me know if you'd like to make any changes or additions. I'm happy to hop on a quick call to discuss further if needed.\n\nLooking forward to your response.\n\nBest regards,\nDemo User`,
-      });
-    }, 2000);
+    }
   };
 
   const handleCopy = (field: "subject" | "body") => {
@@ -65,14 +73,46 @@ export default function EmailGeneratorPage() {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const handleSaveDraft = () => {
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 2000);
+  const handleSaveDraft = async () => {
+    if (!generatedEmail) return;
+    setActionError(null);
+    setSaveSuccess(false);
+    setIsSaving(true);
+    try {
+      await saveEmailDraft({
+        recipient: recipient,
+        subject: generatedEmail.subject,
+        body: generatedEmail.body
+      });
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err: any) {
+      console.error(err);
+      setActionError(err.message || "Failed to save draft");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const handleSend = () => {
-    setSendSuccess(true);
-    setTimeout(() => setSendSuccess(false), 2500);
+  const handleSend = async () => {
+    if (!generatedEmail || !recipient) return;
+    setActionError(null);
+    setSendSuccess(false);
+    setIsSending(true);
+    try {
+      await sendEmail({
+        recipient: recipient,
+        subject: generatedEmail.subject,
+        body: generatedEmail.body
+      });
+      setSendSuccess(true);
+      setTimeout(() => setSendSuccess(false), 3000);
+    } catch (err: any) {
+      console.error(err);
+      setActionError(err.message || "Failed to send email");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleRegenerate = () => {
@@ -308,15 +348,18 @@ export default function EmailGeneratorPage() {
                   />
                 </div>
 
-                {/* Actions */}
+                 {/* Actions */}
                 <div className="flex gap-3 pt-2">
                   <Button
                     variant="outline"
                     onClick={handleSaveDraft}
                     id="save-draft-btn"
                     className="flex-1"
+                    disabled={isSaving || isGenerating}
                   >
-                    {saveSuccess ? (
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : saveSuccess ? (
                       <><Check className="h-4 w-4 mr-2 text-emerald-400" />Saved!</>
                     ) : (
                       <><Save className="h-4 w-4 mr-2" />Save Draft</>
@@ -326,8 +369,11 @@ export default function EmailGeneratorPage() {
                     onClick={handleSend}
                     id="send-email-btn"
                     className="flex-1"
+                    disabled={isSending || isGenerating}
                   >
-                    {sendSuccess ? (
+                    {isSending ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : sendSuccess ? (
                       <><Check className="h-4 w-4 mr-2" />Sent!</>
                     ) : (
                       <><Send className="h-4 w-4 mr-2" />Send via SMTP</>
@@ -335,10 +381,28 @@ export default function EmailGeneratorPage() {
                   </Button>
                 </div>
 
+                {!recipient && (
+                  <p className="text-xs text-zinc-600 text-center">Add a recipient email to enable Send</p>
+                )}
+
                 {sendSuccess && (
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
                     <Check className="h-4 w-4" />
-                    Email sent successfully! (Mock — backend integration coming soon)
+                    Email sent successfully!
+                  </div>
+                )}
+
+                {saveSuccess && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
+                    <Check className="h-4 w-4" />
+                    Draft saved successfully!
+                  </div>
+                )}
+
+                {actionError && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-medium">
+                    <AlertCircle className="h-4 w-4" />
+                    {actionError}
                   </div>
                 )}
               </CardContent>
