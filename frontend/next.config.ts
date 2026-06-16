@@ -8,6 +8,15 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1",
   },
+  async redirects() {
+    return [
+      {
+        source: "/logi",
+        destination: "/login",
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {
