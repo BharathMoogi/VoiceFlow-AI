@@ -32,6 +32,15 @@ export async function POST(req: Request) {
     // Strip codec params for the Gemini API (it only wants the base type)
     const cleanMime = mimeType.split(';')[0] || 'audio/webm';
 
+    // Normalize format to OpenAI-supported formats (wav, mp3) to bypass gateway validation.
+    // Gemini natively decodes the underlying container format automatically regardless of this label.
+    let audioFormat = cleanMime.replace('audio/', '') || 'webm';
+    if (audioFormat === 'mpeg' || audioFormat === 'mpga') {
+      audioFormat = 'mp3';
+    } else if (audioFormat !== 'wav' && audioFormat !== 'mp3') {
+      audioFormat = 'wav';
+    }
+
     const insforge = getServerClient();
 
     // ── Call Gemini via InsForge AI gateway ──────────────────────
@@ -47,7 +56,7 @@ export async function POST(req: Request) {
               type: 'input_audio',
               input_audio: {
                 data: base64Audio,
-                format: cleanMime.replace('audio/', '') || 'webm',
+                format: audioFormat,
               },
             },
             {
