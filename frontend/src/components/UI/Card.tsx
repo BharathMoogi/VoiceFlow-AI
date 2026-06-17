@@ -14,8 +14,8 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   return (
     <div
-      className={`glass rounded-xl p-6 transition-all duration-300 ${
-        hoverEffect ? "hover:-translate-y-1 hover:shadow-lg hover:shadow-[#002D5C]/5 hover:border-[#002D5C]/15" : ""
+      className={`bg-[#1E293B]/70 border border-white/5 rounded-2xl p-6 transition-all duration-300 backdrop-blur-md ${
+        hoverEffect ? "hover:-translate-y-1 hover:shadow-xl hover:shadow-[#06B6D4]/5 hover:border-[#2563EB]/30" : ""
       } ${className}`}
       {...props}
     >
@@ -40,7 +40,7 @@ export const CardTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
   ...props
 }) => (
   <h3
-    className={`text-lg font-semibold leading-none tracking-tight text-[#002D5C] ${className}`}
+    className={`text-lg font-bold leading-none tracking-tight text-white ${className}`}
     {...props}
   >
     {children}
@@ -52,7 +52,7 @@ export const CardDescription: React.FC<React.HTMLAttributes<HTMLParagraphElement
   className = "",
   ...props
 }) => (
-  <p className={`text-sm text-muted-foreground ${className}`} {...props}>
+  <p className={`text-sm text-slate-400 ${className}`} {...props}>
     {children}
   </p>
 );

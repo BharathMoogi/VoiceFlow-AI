@@ -28,7 +28,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   
   // Preferences states
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [notifications, setNotifications] = useState(true);
 
   // Load actual user info if logged in
@@ -86,19 +86,19 @@ export default function SettingsPage() {
   const initial = userInfo.name ? userInfo.name.charAt(0).toUpperCase() : "M";
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] bg-gradient-to-br from-[#FFFFFF] via-[#FFFFFF] to-[#F4F8FB] text-[#4B4B4B] p-4 sm:p-6 md:p-8 rounded-3xl">
+    <div className="min-h-screen bg-transparent text-white p-4 sm:p-6 md:p-8 rounded-3xl">
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Profile Header Card */}
-        <div className="bg-white border border-[#A4C8E1]/20 rounded-3xl p-6 shadow-sm shadow-[#A4C8E1]/10 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all">
+        <div className="bg-[#1E293B]/70 border border-white/5 rounded-3xl p-6 shadow-xl shadow-[#020617]/40 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all backdrop-blur-md">
           <div className="flex flex-col sm:flex-row items-center gap-5 w-full sm:w-auto">
-            {/* Avatar block with green badge */}
-            <div className="relative">
-              <div className="h-20 w-20 rounded-2xl bg-[#4682B4] flex items-center justify-center text-white text-3xl font-extrabold shadow-md">
+            {/* Avatar block with badge */}
+            <div className="relative border border-white/10 rounded-2xl p-0.5">
+              <div className="h-20 w-20 rounded-2xl bg-[#2563EB] flex items-center justify-center text-white text-3xl font-extrabold shadow-lg">
                 {initial}
               </div>
-              <div className="absolute -bottom-1.5 -right-1.5 h-6 w-6 rounded-full bg-[#A8D8B9] border-2 border-white flex items-center justify-center shadow-md">
-                <ShieldCheck className="h-3.5 w-3.5 text-[#4B4B4B]" />
+              <div className="absolute -bottom-1.5 -right-1.5 h-6 w-6 rounded-full bg-[#06B6D4] border-2 border-[#1E293B] flex items-center justify-center shadow-md">
+                <ShieldCheck className="h-3.5 w-3.5 text-[#0F172A]" />
               </div>
             </div>
 
@@ -110,7 +110,7 @@ export default function SettingsPage() {
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3 py-1.5 text-sm bg-[#F4F8FB] border border-[#A4C8E1]/40 rounded-xl focus:outline-none focus:border-[#4682B4] text-[#4B4B4B] font-semibold"
+                    className="w-full px-3 py-1.5 text-sm bg-[#0F172A] border border-white/10 rounded-xl focus:outline-none focus:border-[#2563EB] text-white font-semibold"
                     placeholder="Enter name"
                     autoFocus
                   />
@@ -118,13 +118,13 @@ export default function SettingsPage() {
                     <button 
                       onClick={handleSaveProfile}
                       disabled={saving}
-                      className="p-2 bg-[#4682B4] hover:bg-[#4682B4]/90 text-white rounded-xl shadow-sm transition-all"
+                      className="p-2 bg-[#2563EB] hover:bg-[#2563EB]/90 text-white rounded-xl shadow-sm transition-all"
                     >
                       <Check className="h-4 w-4" />
                     </button>
                     <button 
                       onClick={() => setIsEditing(false)}
-                      className="p-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded-xl transition-all"
+                      className="p-2 bg-[#1E293B] hover:bg-white/5 text-slate-400 rounded-xl transition-all"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -132,11 +132,11 @@ export default function SettingsPage() {
                 </div>
               ) : (
                 <>
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4682B4] leading-tight">
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
                     {userInfo.name}
                   </h1>
-                  <div className="flex items-center justify-center sm:justify-start gap-1.5 text-[#4B4B4B] text-sm mt-1">
-                    <Mail className="h-3.5 w-3.5 text-[#A4C8E1]" />
+                  <div className="flex items-center justify-center sm:justify-start gap-1.5 text-slate-400 text-sm mt-1">
+                    <Mail className="h-3.5 w-3.5 text-[#06B6D4]" />
                     <span>{userInfo.email}</span>
                   </div>
                 </>
@@ -147,7 +147,7 @@ export default function SettingsPage() {
           {!isEditing && (
             <button 
               onClick={startEditing}
-              className="px-6 py-2.5 bg-white border border-[#A4C8E1] hover:border-[#4682B4] rounded-full text-xs font-bold text-[#4682B4] shadow-sm transition-all active:scale-95 whitespace-nowrap"
+              className="px-6 py-2.5 bg-gradient-to-r from-[#2563EB] to-blue-600 border border-white/10 hover:border-white/20 rounded-full text-xs font-bold text-white shadow-md transition-all active:scale-95 whitespace-nowrap"
             >
               Edit Profile
             </button>
@@ -159,48 +159,48 @@ export default function SettingsPage() {
           
           {/* Activity Section */}
           <div className="space-y-3">
-            <span className="text-[11px] font-bold tracking-wider text-[#4B4B4B] uppercase px-1">
+            <span className="text-[11px] font-bold tracking-wider text-slate-500 uppercase px-1">
               Activity
             </span>
-            <div className="bg-white border border-[#A4C8E1]/20 rounded-3xl shadow-sm shadow-[#A4C8E1]/10 overflow-hidden divide-y divide-zinc-100">
+            <div className="bg-[#1E293B]/70 border border-white/5 rounded-3xl shadow-xl shadow-[#020617]/20 overflow-hidden divide-y divide-white/5 backdrop-blur-md">
               
               <div 
                 onClick={() => router.push("/dashboard/voice-upload")}
-                className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all"
+                className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#4682B4]/10 text-[#4682B4] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-[#2563EB]/10 text-[#2563EB] flex items-center justify-center border border-[#2563EB]/10">
                     <Mic className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-[#4B4B4B]">Voice Uploads</span>
+                  <span className="text-sm font-bold text-slate-200">Voice Uploads</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-[#A4C8E1]" />
+                <ChevronRight className="h-4 w-4 text-slate-500" />
               </div>
 
               <div 
                 onClick={() => router.push("/dashboard/agent-configs")}
-                className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all"
+                className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#A4C8E1]/15 text-[#4682B4] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-[#06B6D4]/10 text-[#06B6D4] flex items-center justify-center border border-[#06B6D4]/10">
                     <Sliders className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-[#4B4B4B]">Agent Configs</span>
+                  <span className="text-sm font-bold text-slate-200">Agent Configs</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-[#A4C8E1]" />
+                <ChevronRight className="h-4 w-4 text-slate-500" />
               </div>
 
               <div 
                 onClick={() => router.push("/dashboard/call-logs")}
-                className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all"
+                className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#4B4B4B]/10 text-[#4B4B4B] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center border border-blue-500/10">
                     <PhoneCall className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-[#4B4B4B]">Call History</span>
+                  <span className="text-sm font-bold text-slate-200">Call History</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-[#A4C8E1]" />
+                <ChevronRight className="h-4 w-4 text-slate-500" />
               </div>
 
             </div>
@@ -208,21 +208,21 @@ export default function SettingsPage() {
 
           {/* Preferences Section */}
           <div className="space-y-3">
-            <span className="text-[11px] font-bold tracking-wider text-[#4B4B4B] uppercase px-1">
+            <span className="text-[11px] font-bold tracking-wider text-slate-500 uppercase px-1">
               Preferences
             </span>
-            <div className="bg-white border border-[#A4C8E1]/20 rounded-3xl shadow-sm shadow-[#A4C8E1]/10 overflow-hidden divide-y divide-zinc-100">
+            <div className="bg-[#1E293B]/70 border border-white/5 rounded-3xl shadow-xl shadow-[#020617]/20 overflow-hidden divide-y divide-white/5 backdrop-blur-md">
               
               <div className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#A4C8E1]/15 text-[#4B4B4B] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-white/5 text-slate-400 flex items-center justify-center border border-white/5">
                     {darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                   </div>
-                  <span className="text-sm font-bold text-[#4B4B4B]">Dark Mode</span>
+                  <span className="text-sm font-bold text-slate-200">Dark Mode</span>
                 </div>
                 <button 
                   onClick={() => setDarkMode(!darkMode)}
-                  className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none ${darkMode ? 'bg-[#4682B4]' : 'bg-[#A4C8E1]/30'}`}
+                  className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none ${darkMode ? 'bg-[#06B6D4]' : 'bg-slate-700'}`}
                 >
                   <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${darkMode ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
@@ -230,14 +230,14 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#4682B4]/10 text-[#4682B4] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-[#06B6D4]/10 text-[#06B6D4] flex items-center justify-center border border-[#06B6D4]/10">
                     <Bell className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-[#4B4B4B]">Notifications</span>
+                  <span className="text-sm font-bold text-slate-200">Notifications</span>
                 </div>
                 <button 
                   onClick={() => setNotifications(!notifications)}
-                  className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none ${notifications ? 'bg-[#A8D8B9]' : 'bg-[#A4C8E1]/30'}`}
+                  className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none ${notifications ? 'bg-[#06B6D4]' : 'bg-slate-700'}`}
                 >
                   <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${notifications ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
@@ -248,19 +248,19 @@ export default function SettingsPage() {
 
           {/* Support & Legal Section */}
           <div className="space-y-3">
-            <span className="text-[11px] font-bold tracking-wider text-[#4B4B4B] uppercase px-1">
+            <span className="text-[11px] font-bold tracking-wider text-slate-500 uppercase px-1">
               Support & Legal
             </span>
-            <div className="bg-white border border-[#A4C8E1]/20 rounded-3xl shadow-sm shadow-[#A4C8E1]/10 overflow-hidden">
+            <div className="bg-[#1E293B]/70 border border-white/5 rounded-3xl shadow-xl shadow-[#020617]/20 overflow-hidden backdrop-blur-md">
               
-              <div className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all">
+              <div className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-all">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#A4C8E1]/15 text-[#4682B4] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-[#06B6D4]/10 text-[#06B6D4] flex items-center justify-center border border-[#06B6D4]/10">
                     <MessageSquare className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-[#4B4B4B]">Feedback</span>
+                  <span className="text-sm font-bold text-slate-200">Feedback</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-[#A4C8E1]" />
+                <ChevronRight className="h-4 w-4 text-slate-500" />
               </div>
 
             </div>
@@ -271,19 +271,19 @@ export default function SettingsPage() {
             <span className="text-[11px] font-bold tracking-wider text-rose-500 uppercase px-1">
               Danger Zone
             </span>
-            <div className="bg-white border border-red-100/50 rounded-3xl shadow-sm shadow-red-100/10 overflow-hidden">
+            <div className="bg-[#1E293B]/70 border border-red-500/10 rounded-3xl shadow-xl shadow-[#020617]/20 overflow-hidden backdrop-blur-md">
               
               <button 
                 onClick={handleLogout}
-                className="w-full flex items-center justify-between p-4 hover:bg-red-50/20 cursor-pointer transition-all text-left"
+                className="w-full flex items-center justify-between p-4 hover:bg-red-500/10 cursor-pointer transition-all text-left"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-red-50/70 text-red-500 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center border border-red-500/10">
                     <LogOut className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-red-600">Sign Out</span>
+                  <span className="text-sm font-bold text-rose-500">Sign Out</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-red-500" />
+                <ChevronRight className="h-4 w-4 text-rose-500" />
               </button>
 
             </div>
