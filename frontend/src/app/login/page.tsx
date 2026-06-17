@@ -72,29 +72,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col justify-center items-center px-4 relative min-h-screen">
+    <div className="flex-1 flex flex-col justify-center items-center px-4 relative min-h-screen bg-[#FFFFFF] text-[#333333]">
       {/* Decorative gradients */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-indigo-500/20 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[300px] h-[300px] bg-pink-500/10 rounded-full blur-[80px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-[#002D5C]/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[300px] h-[300px] bg-[#7D9B9F]/10 rounded-full blur-[80px] pointer-events-none" />
 
       {/* Brand Header */}
       <div className="flex items-center space-x-3 mb-8 animate-fade-in">
-        <div className="p-3 bg-indigo-600/25 border border-indigo-500/30 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/10">
-          <Mic className="h-6 w-6 text-indigo-400" />
+        <div className="p-3 bg-[#002D5C]/10 border border-[#002D5C]/20 rounded-2xl flex items-center justify-center shadow-md">
+          <Mic className="h-6 w-6 text-[#002D5C]" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">VoiceFlow-AI</h1>
-          <p className="text-xs text-indigo-400 font-medium">Next-Gen Audio Email Generator</p>
+          <h1 className="text-2xl font-bold tracking-tight text-[#002D5C]">VoiceFlow-AI</h1>
+          <p className="text-xs text-[#7D9B9F] font-medium">Next-Gen Audio Email Generator</p>
         </div>
       </div>
 
-      <Card className="w-full max-w-md relative z-10">
+      <Card className="w-full max-w-md relative z-10 border border-[#7D9B9F]/20 shadow-sm shadow-[#7D9B9F]/10 bg-white">
         <CardHeader>
-          <div className="grid grid-cols-2 gap-2 bg-zinc-900/50 p-1.5 rounded-lg border border-zinc-800 mb-6">
+          <div className="grid grid-cols-2 gap-2 bg-zinc-50 p-1.5 rounded-lg border border-[#7D9B9F]/20 mb-6">
             <button
               onClick={() => { setActiveTab("login"); setError(""); }}
               className={`py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                activeTab === "login" ? "bg-indigo-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"
+                activeTab === "login" ? "bg-[#002D5C] text-white shadow-sm" : "text-[#4B4B4D] hover:text-[#002D5C]"
               }`}
             >
               Sign In
@@ -102,16 +102,16 @@ export default function LoginPage() {
             <button
               onClick={() => { setActiveTab("signup"); setError(""); }}
               className={`py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                activeTab === "signup" ? "bg-indigo-600 text-white shadow-sm" : "text-zinc-400 hover:text-zinc-200"
+                activeTab === "signup" ? "bg-[#002D5C] text-white shadow-sm" : "text-[#4B4B4D] hover:text-[#002D5C]"
               }`}
             >
               Sign Up
             </button>
           </div>
-          <CardTitle className="text-xl text-center">
+          <CardTitle className="text-xl text-center text-[#002D5C]">
             {activeTab === "login" ? "Welcome back" : activeTab === "signup" ? "Create an account" : "Verify Email"}
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-zinc-500">
             {activeTab === "login"
               ? "Sign in to access your dashboard and voice templates."
               : activeTab === "signup"
@@ -123,14 +123,14 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs rounded-lg p-3 text-center">
+              <div className="bg-rose-500/10 border border-rose-500/20 text-rose-500 text-xs rounded-lg p-3 text-center">
                 {error}
               </div>
             )}
 
             {activeTab === "signup" && (
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500 mt-5">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400 mt-5">
                   <User className="h-4 w-4" />
                 </div>
                 <Input
@@ -147,7 +147,7 @@ export default function LoginPage() {
             )}
 
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500 mt-5">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400 mt-5">
                 <Mail className="h-4 w-4" />
               </div>
               <Input
@@ -164,7 +164,7 @@ export default function LoginPage() {
 
             {activeTab !== "verify" && (
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500 mt-5">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400 mt-5">
                   <KeyRound className="h-4 w-4" />
                 </div>
                 <Input
@@ -182,7 +182,7 @@ export default function LoginPage() {
 
             {activeTab === "verify" && (
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-500 mt-5">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-zinc-400 mt-5">
                   <KeyRound className="h-4 w-4" />
                 </div>
                 <Input
@@ -200,13 +200,13 @@ export default function LoginPage() {
           </CardContent>
 
           <CardFooter className="flex-col space-y-3">
-            <Button type="submit" className="w-full" isLoading={isLoading}>
+            <Button type="submit" className="w-full bg-[#002D5C] hover:bg-[#002D5C]/90 text-white" isLoading={isLoading}>
               {activeTab === "login" ? "Sign In" : activeTab === "signup" ? "Register" : "Verify"}
             </Button>
             {activeTab === "login" && (
               <button
                 type="button"
-                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                className="text-xs text-[#002D5C] hover:text-[#002D5C]/80 transition-colors"
                 onClick={() => alert("Password reset coming soon.")}
               >
                 Forgot your password?

@@ -24,10 +24,10 @@ import { getDashboardStats, type DashboardStats, isLoggedIn, saveUserInfo } from
 
 // Icon + color mapping for activity types
 const activityConfig: Record<string, { icon: typeof Mic; color: string }> = {
-  email_sent: { icon: CheckCircle, color: "text-emerald-400" },
-  draft: { icon: Mail, color: "text-violet-400" },
-  transcription: { icon: Mic, color: "text-indigo-400" },
-  conversation: { icon: MessageSquare, color: "text-amber-400" },
+  email_sent: { icon: CheckCircle, color: "text-[#002D5C]" },
+  draft: { icon: Mail, color: "text-[#7D9B9F]" },
+  transcription: { icon: Mic, color: "text-[#002D5C]" },
+  conversation: { icon: MessageSquare, color: "text-[#4B4B4D]" },
 };
 
 const quickActions = [
@@ -36,21 +36,21 @@ const quickActions = [
     desc: "Upload or record voice to generate email",
     href: "/dashboard/voice-upload",
     icon: Mic,
-    gradient: "from-indigo-600 to-violet-600",
+    gradient: "from-[#002D5C] to-[#7D9B9F]",
   },
   {
     label: "Generate Email",
     desc: "Describe your email, let AI write it",
     href: "/dashboard/email-generator",
     icon: Zap,
-    gradient: "from-violet-600 to-pink-600",
+    gradient: "from-[#7D9B9F] to-[#4B4B4D]",
   },
   {
     label: "View Conversations",
     desc: "Browse all AI conversations",
     href: "/dashboard/conversations",
     icon: MessageSquare,
-    gradient: "from-emerald-600 to-teal-600",
+    gradient: "from-[#002D5C] to-[#4B4B4D]",
   },
 ];
 
@@ -97,8 +97,8 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
-          <p className="text-sm text-zinc-400">Loading your dashboard...</p>
+          <Loader2 className="h-8 w-8 text-[#002D5C] animate-spin" />
+          <p className="text-sm text-zinc-500">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -111,10 +111,10 @@ export default function DashboardPage() {
         <Card className="max-w-md w-full !p-6">
           <div className="flex flex-col items-center gap-4 text-center">
             <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20">
-              <AlertCircle className="h-6 w-6 text-red-400" />
+              <AlertCircle className="h-6 w-6 text-red-500" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-white mb-1">Unable to load dashboard</p>
+              <p className="text-sm font-semibold text-[#333333] mb-1">Unable to load dashboard</p>
               <p className="text-xs text-zinc-500">{error}</p>
             </div>
             <Button
@@ -146,47 +146,47 @@ export default function DashboardPage() {
       value: stats.transcriptions.toLocaleString(),
       change: stats.transcriptions_change,
       icon: Users,
-      color: "text-indigo-400",
-      bg: "bg-indigo-500/10 border-indigo-500/20",
+      color: "text-[#002D5C]",
+      bg: "bg-[#002D5C]/10 border-[#002D5C]/20",
     },
     {
       label: "Active Campaigns",
       value: stats.emails_sent.toLocaleString(),
       change: stats.emails_sent_change,
       icon: Megaphone,
-      color: "text-emerald-400",
-      bg: "bg-emerald-500/10 border-emerald-500/20",
+      color: "text-[#7D9B9F]",
+      bg: "bg-[#7D9B9F]/15 border-[#7D9B9F]/30",
     },
     {
       label: "Dialed Calls",
       value: stats.conversations.toLocaleString(),
       change: stats.conversations_change,
       icon: PhoneCall,
-      color: "text-violet-400",
-      bg: "bg-violet-500/10 border-violet-500/20",
+      color: "text-[#4B4B4D]",
+      bg: "bg-[#4B4B4D]/10 border-[#4B4B4D]/20",
     },
     {
       label: "Call Success Rate",
       value: `${stats.success_rate}%`,
       change: stats.success_rate_label,
       icon: TrendingUp,
-      color: "text-pink-400",
-      bg: "bg-pink-500/10 border-pink-500/20",
+      color: "text-[#002D5C]",
+      bg: "bg-[#002D5C]/10 border-[#002D5C]/25",
     },
   ];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="space-y-8 max-w-7xl mx-auto text-[#333333]">
       {/* Welcome */}
-      <div className="relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-600/10 via-violet-600/5 to-transparent p-6">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl border border-[#7D9B9F]/20 bg-gradient-to-br from-[#002D5C]/5 via-[#7D9B9F]/5 to-transparent p-6">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#002D5C]/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative">
-          <p className="text-xs font-semibold text-indigo-400 uppercase tracking-widest mb-1">Welcome back</p>
-          <h1 className="text-2xl font-bold text-white mb-1">{getGreeting()}, {user.name} 👋</h1>
-          <p className="text-sm text-zinc-400">
+          <p className="text-xs font-bold text-[#002D5C] uppercase tracking-widest mb-1">Welcome back</p>
+          <h1 className="text-2xl font-extrabold text-[#002D5C] mb-1">{getGreeting()}, {user.name} 👋</h1>
+          <p className="text-sm text-zinc-600">
             {user.draft_count > 0 ? (
               <>
-                You have <span className="text-white font-medium">{user.draft_count} email draft{user.draft_count !== 1 ? "s" : ""}</span> ready to send.
+                You have <span className="text-[#002D5C] font-semibold">{user.draft_count} email draft{user.draft_count !== 1 ? "s" : ""}</span> ready to send.
               </>
             ) : (
               <>Your dashboard is up to date. Start by recording a voice memo or generating an email.</>
@@ -200,11 +200,11 @@ export default function DashboardPage() {
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.label} hoverEffect className="!p-5">
+            <Card key={stat.label} hoverEffect className="!p-5 bg-white border border-[#7D9B9F]/20">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs text-zinc-500 font-medium mb-1">{stat.label}</p>
-                  <p className="text-3xl font-bold text-white mb-1">{stat.value}</p>
+                  <p className="text-3xl font-extrabold text-[#002D5C] mb-1">{stat.value}</p>
                   <p className="text-xs text-zinc-500">{stat.change}</p>
                 </div>
                 <div className={`p-2.5 rounded-xl border ${stat.bg}`}>
@@ -220,20 +220,20 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         {/* Quick actions */}
         <div className="xl:col-span-2 space-y-3">
-          <h2 className="text-sm font-semibold text-zinc-300">Quick Actions</h2>
+          <h2 className="text-sm font-bold text-[#002D5C] px-1">Quick Actions</h2>
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
               <Link key={action.href} href={action.href} id={`quick-${action.label.toLowerCase().replace(/\s/g, "-")}`}>
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-zinc-800/60 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/70 transition-all duration-200 group cursor-pointer">
-                  <div className={`flex-shrink-0 p-3 rounded-xl bg-gradient-to-br ${action.gradient} shadow-lg`}>
+                <div className="flex items-center gap-4 p-4 rounded-xl border border-[#7D9B9F]/20 bg-white/65 hover:border-[#002D5C]/35 hover:bg-[#7D9B9F]/5 transition-all duration-200 group cursor-pointer">
+                  <div className={`flex-shrink-0 p-3 rounded-xl bg-gradient-to-br ${action.gradient} shadow-md`}>
                     <Icon className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white">{action.label}</p>
+                    <p className="text-sm font-semibold text-[#002D5C]">{action.label}</p>
                     <p className="text-xs text-zinc-500 truncate">{action.desc}</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-zinc-600 group-hover:text-zinc-300 group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-[#002D5C] group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0" />
                 </div>
               </Link>
             );
@@ -241,27 +241,27 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent activity */}
-        <Card className="xl:col-span-3 !p-0 overflow-hidden">
-          <div className="p-5 border-b border-zinc-800/60">
+        <Card className="xl:col-span-3 !p-0 overflow-hidden border border-[#7D9B9F]/20 bg-white shadow-sm shadow-[#7D9B9F]/10">
+          <div className="p-5 border-b border-zinc-100">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base">Recent Activity</CardTitle>
-                <CardDescription className="mt-0.5">Your latest actions and events</CardDescription>
+                <CardTitle className="text-base text-[#002D5C]">Recent Activity</CardTitle>
+                <CardDescription className="mt-0.5 text-zinc-500">Your latest actions and events</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" className="text-indigo-400 hover:text-indigo-300">
+              <Button variant="ghost" size="sm" className="text-[#002D5C] hover:text-[#002D5C]/80 hover:bg-[#7D9B9F]/10">
                 <Clock className="h-3.5 w-3.5 mr-1.5" />
                 View all
               </Button>
             </div>
           </div>
-          <div className="divide-y divide-zinc-800/40">
+          <div className="divide-y divide-zinc-100">
             {recent_activity.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 px-4">
-                <div className="p-3 rounded-xl bg-zinc-800/40 mb-3">
-                  <Clock className="h-5 w-5 text-zinc-600" />
+                <div className="p-3 rounded-xl bg-zinc-50 mb-3">
+                  <Clock className="h-5 w-5 text-zinc-400" />
                 </div>
-                <p className="text-sm text-zinc-400 font-medium">No activity yet</p>
-                <p className="text-xs text-zinc-600 mt-1">Your recent actions will appear here</p>
+                <p className="text-sm text-zinc-600 font-medium">No activity yet</p>
+                <p className="text-xs text-zinc-400 mt-1">Your recent actions will appear here</p>
               </div>
             ) : (
               recent_activity.map((item) => {
@@ -270,16 +270,16 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={item.id}
-                    className="flex items-start gap-3 p-4 hover:bg-zinc-800/20 transition-colors duration-150"
+                    className="flex items-start gap-3 p-4 hover:bg-zinc-50/50 transition-colors duration-150"
                   >
                     <div className="flex-shrink-0 mt-0.5">
                       <Icon className={`h-4 w-4 ${config.color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-zinc-200 truncate">{item.title}</p>
+                      <p className="text-sm font-semibold text-zinc-800 truncate">{item.title}</p>
                       <p className="text-xs text-zinc-500 truncate">{item.desc}</p>
                     </div>
-                    <span className="text-[11px] text-zinc-600 flex-shrink-0 mt-0.5">{item.time}</span>
+                    <span className="text-[11px] text-zinc-400 flex-shrink-0 mt-0.5">{item.time}</span>
                   </div>
                 );
               })

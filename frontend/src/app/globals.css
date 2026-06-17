@@ -1,25 +1,25 @@
 @import "tailwindcss";
 
 :root {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #18181b;
-  --card-foreground: #fafafa;
-  --popover: #09090b;
-  --popover-foreground: #fafafa;
-  --primary: #6366f1;
-  --primary-foreground: #fafafa;
-  --secondary: #27272a;
-  --secondary-foreground: #fafafa;
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
-  --accent: #27272a;
-  --accent-foreground: #fafafa;
+  --background: #FFFFFF;
+  --foreground: #333333;
+  --card: #FFFFFF;
+  --card-foreground: #333333;
+  --popover: #FFFFFF;
+  --popover-foreground: #333333;
+  --primary: #002D5C;
+  --primary-foreground: #FFFFFF;
+  --secondary: #7D9B9F;
+  --secondary-foreground: #FFFFFF;
+  --muted: #E5E9EB;
+  --muted-foreground: #4B4B4D;
+  --accent: #4B4B4D;
+  --accent-foreground: #FFFFFF;
   --destructive: #ef4444;
-  --destructive-foreground: #fafafa;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #6366f1;
+  --destructive-foreground: #FFFFFF;
+  --border: #E5E9EB;
+  --input: #F8FAFB;
+  --ring: #002D5C;
   --radius: 0.75rem;
 }
 
@@ -55,12 +55,12 @@ body {
   overflow-x: hidden;
 }
 
-/* Glassmorphism utility */
+/* Glassmorphism utility - updated for light theme with system branding colors */
 .glass {
-  background: rgba(24, 24, 27, 0.65);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(125, 155, 159, 0.15);
 }
 
 /* Shimmer loading effect */
@@ -74,7 +74,7 @@ body {
 }
 
 .shimmer {
-  background: linear-gradient(90deg, #18181b 25%, #27272a 50%, #18181b 75%);
+  background: linear-gradient(90deg, #F8FAFB 25%, #E5E9EB 50%, #F8FAFB 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
 }
@@ -88,9 +88,9 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #27272a;
+  background: #E5E9EB;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3f3f46;
+  background: #7D9B9F;
 }

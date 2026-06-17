@@ -15,7 +15,7 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       className={`glass rounded-xl p-6 transition-all duration-300 ${
-        hoverEffect ? "hover:-translate-y-1 hover:shadow-lg hover:shadow-indigo-500/10 hover:border-indigo-500/20" : ""
+        hoverEffect ? "hover:-translate-y-1 hover:shadow-lg hover:shadow-[#002D5C]/5 hover:border-[#002D5C]/15" : ""
       } ${className}`}
       {...props}
     >
@@ -40,7 +40,7 @@ export const CardTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
   ...props
 }) => (
   <h3
-    className={`text-lg font-semibold leading-none tracking-tight text-white ${className}`}
+    className={`text-lg font-semibold leading-none tracking-tight text-[#002D5C] ${className}`}
     {...props}
   >
     {children}
