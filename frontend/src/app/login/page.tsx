@@ -72,29 +72,29 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col justify-center items-center px-4 relative min-h-screen bg-[#FFFFFF] text-[#333333]">
+    <div className="flex-1 flex flex-col justify-center items-center px-4 relative min-h-screen bg-[#FFFFFF] text-[#4B4B4B]">
       {/* Decorative gradients */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-[#002D5C]/10 rounded-full blur-[100px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[300px] h-[300px] bg-[#7D9B9F]/10 rounded-full blur-[80px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] bg-[#4682B4]/10 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-[300px] h-[300px] bg-[#A4C8E1]/10 rounded-full blur-[80px] pointer-events-none" />
 
       {/* Brand Header */}
       <div className="flex items-center space-x-3 mb-8 animate-fade-in">
-        <div className="p-3 bg-[#002D5C]/10 border border-[#002D5C]/20 rounded-2xl flex items-center justify-center shadow-md">
-          <Mic className="h-6 w-6 text-[#002D5C]" />
+        <div className="p-3 bg-[#4682B4]/10 border border-[#4682B4]/20 rounded-2xl flex items-center justify-center shadow-md">
+          <Mic className="h-6 w-6 text-[#4682B4]" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#002D5C]">VoiceFlow-AI</h1>
-          <p className="text-xs text-[#7D9B9F] font-medium">Next-Gen Audio Email Generator</p>
+          <h1 className="text-2xl font-bold tracking-tight text-[#4682B4]">VoiceFlow-AI</h1>
+          <p className="text-xs text-[#A4C8E1] font-medium">Next-Gen Audio Email Generator</p>
         </div>
       </div>
 
-      <Card className="w-full max-w-md relative z-10 border border-[#7D9B9F]/20 shadow-sm shadow-[#7D9B9F]/10 bg-white">
+      <Card className="w-full max-w-md relative z-10 border border-[#A4C8E1]/20 shadow-sm shadow-[#A4C8E1]/10 bg-white">
         <CardHeader>
-          <div className="grid grid-cols-2 gap-2 bg-zinc-50 p-1.5 rounded-lg border border-[#7D9B9F]/20 mb-6">
+          <div className="grid grid-cols-2 gap-2 bg-zinc-50 p-1.5 rounded-lg border border-[#A4C8E1]/20 mb-6">
             <button
               onClick={() => { setActiveTab("login"); setError(""); }}
               className={`py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                activeTab === "login" ? "bg-[#002D5C] text-white shadow-sm" : "text-[#4B4B4D] hover:text-[#002D5C]"
+                activeTab === "login" ? "bg-[#4682B4] text-white shadow-sm" : "text-[#4B4B4B] hover:text-[#4682B4]"
               }`}
             >
               Sign In
@@ -102,13 +102,13 @@ export default function LoginPage() {
             <button
               onClick={() => { setActiveTab("signup"); setError(""); }}
               className={`py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                activeTab === "signup" ? "bg-[#002D5C] text-white shadow-sm" : "text-[#4B4B4D] hover:text-[#002D5C]"
+                activeTab === "signup" ? "bg-[#4682B4] text-white shadow-sm" : "text-[#4B4B4B] hover:text-[#4682B4]"
               }`}
             >
               Sign Up
             </button>
           </div>
-          <CardTitle className="text-xl text-center text-[#002D5C]">
+          <CardTitle className="text-xl text-center text-[#4682B4]">
             {activeTab === "login" ? "Welcome back" : activeTab === "signup" ? "Create an account" : "Verify Email"}
           </CardTitle>
           <CardDescription className="text-center text-zinc-500">
@@ -200,13 +200,13 @@ export default function LoginPage() {
           </CardContent>
 
           <CardFooter className="flex-col space-y-3">
-            <Button type="submit" className="w-full bg-[#002D5C] hover:bg-[#002D5C]/90 text-white" isLoading={isLoading}>
+            <Button type="submit" className="w-full bg-[#4682B4] hover:bg-[#4682B4]/90 text-white" isLoading={isLoading}>
               {activeTab === "login" ? "Sign In" : activeTab === "signup" ? "Register" : "Verify"}
             </Button>
             {activeTab === "login" && (
               <button
                 type="button"
-                className="text-xs text-[#002D5C] hover:text-[#002D5C]/80 transition-colors"
+                className="text-xs text-[#4682B4] hover:text-[#4682B4]/80 transition-colors"
                 onClick={() => alert("Password reset coming soon.")}
               >
                 Forgot your password?

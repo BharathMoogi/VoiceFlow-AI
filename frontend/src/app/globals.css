@@ -2,24 +2,24 @@
 
 :root {
   --background: #FFFFFF;
-  --foreground: #333333;
+  --foreground: #4B4B4B;
   --card: #FFFFFF;
-  --card-foreground: #333333;
+  --card-foreground: #4B4B4B;
   --popover: #FFFFFF;
-  --popover-foreground: #333333;
-  --primary: #002D5C;
+  --popover-foreground: #4B4B4B;
+  --primary: #4682B4;
   --primary-foreground: #FFFFFF;
-  --secondary: #7D9B9F;
+  --secondary: #4B4B4B;
   --secondary-foreground: #FFFFFF;
-  --muted: #E5E9EB;
-  --muted-foreground: #4B4B4D;
-  --accent: #4B4B4D;
-  --accent-foreground: #FFFFFF;
+  --muted: #A4C8E1;
+  --muted-foreground: #4B4B4B;
+  --accent: #A8D8B9;
+  --accent-foreground: #4B4B4B;
   --destructive: #ef4444;
   --destructive-foreground: #FFFFFF;
-  --border: #E5E9EB;
-  --input: #F8FAFB;
-  --ring: #002D5C;
+  --border: #E2EDF5;
+  --input: #F4F8FB;
+  --ring: #4682B4;
   --radius: 0.75rem;
 }
 
@@ -60,7 +60,7 @@ body {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(125, 155, 159, 0.15);
+  border: 1px solid rgba(164, 200, 225, 0.25);
 }
 
 /* Shimmer loading effect */
@@ -74,7 +74,7 @@ body {
 }
 
 .shimmer {
-  background: linear-gradient(90deg, #F8FAFB 25%, #E5E9EB 50%, #F8FAFB 75%);
+  background: linear-gradient(90deg, #F4F8FB 25%, #E2EDF5 50%, #F4F8FB 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite linear;
 }
@@ -88,9 +88,9 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #E5E9EB;
+  background: #E2EDF5;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #7D9B9F;
+  background: #A4C8E1;
 }

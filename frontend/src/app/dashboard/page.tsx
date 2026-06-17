@@ -24,10 +24,10 @@ import { getDashboardStats, type DashboardStats, isLoggedIn, saveUserInfo } from
 
 // Icon + color mapping for activity types
 const activityConfig: Record<string, { icon: typeof Mic; color: string }> = {
-  email_sent: { icon: CheckCircle, color: "text-[#002D5C]" },
-  draft: { icon: Mail, color: "text-[#7D9B9F]" },
-  transcription: { icon: Mic, color: "text-[#002D5C]" },
-  conversation: { icon: MessageSquare, color: "text-[#4B4B4D]" },
+  email_sent: { icon: CheckCircle, color: "text-[#4682B4]" },
+  draft: { icon: Mail, color: "text-[#A4C8E1]" },
+  transcription: { icon: Mic, color: "text-[#4682B4]" },
+  conversation: { icon: MessageSquare, color: "text-[#4B4B4B]" },
 };
 
 const quickActions = [
@@ -36,21 +36,21 @@ const quickActions = [
     desc: "Upload or record voice to generate email",
     href: "/dashboard/voice-upload",
     icon: Mic,
-    gradient: "from-[#002D5C] to-[#7D9B9F]",
+    gradient: "from-[#4682B4] to-[#A4C8E1]",
   },
   {
     label: "Generate Email",
     desc: "Describe your email, let AI write it",
     href: "/dashboard/email-generator",
     icon: Zap,
-    gradient: "from-[#7D9B9F] to-[#4B4B4D]",
+    gradient: "from-[#A4C8E1] to-[#4B4B4B]",
   },
   {
     label: "View Conversations",
     desc: "Browse all AI conversations",
     href: "/dashboard/conversations",
     icon: MessageSquare,
-    gradient: "from-[#002D5C] to-[#4B4B4D]",
+    gradient: "from-[#4682B4] to-[#4B4B4B]",
   },
 ];
 
@@ -97,7 +97,7 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 text-[#002D5C] animate-spin" />
+          <Loader2 className="h-8 w-8 text-[#4682B4] animate-spin" />
           <p className="text-sm text-zinc-500">Loading your dashboard...</p>
         </div>
       </div>
@@ -114,7 +114,7 @@ export default function DashboardPage() {
               <AlertCircle className="h-6 w-6 text-red-500" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-[#333333] mb-1">Unable to load dashboard</p>
+              <p className="text-sm font-semibold text-[#4B4B4B] mb-1">Unable to load dashboard</p>
               <p className="text-xs text-zinc-500">{error}</p>
             </div>
             <Button
@@ -146,47 +146,47 @@ export default function DashboardPage() {
       value: stats.transcriptions.toLocaleString(),
       change: stats.transcriptions_change,
       icon: Users,
-      color: "text-[#002D5C]",
-      bg: "bg-[#002D5C]/10 border-[#002D5C]/20",
+      color: "text-[#4682B4]",
+      bg: "bg-[#4682B4]/10 border-[#4682B4]/20",
     },
     {
       label: "Active Campaigns",
       value: stats.emails_sent.toLocaleString(),
       change: stats.emails_sent_change,
       icon: Megaphone,
-      color: "text-[#7D9B9F]",
-      bg: "bg-[#7D9B9F]/15 border-[#7D9B9F]/30",
+      color: "text-[#A4C8E1]",
+      bg: "bg-[#A4C8E1]/15 border-[#A4C8E1]/30",
     },
     {
       label: "Dialed Calls",
       value: stats.conversations.toLocaleString(),
       change: stats.conversations_change,
       icon: PhoneCall,
-      color: "text-[#4B4B4D]",
-      bg: "bg-[#4B4B4D]/10 border-[#4B4B4D]/20",
+      color: "text-[#4B4B4B]",
+      bg: "bg-[#4B4B4B]/10 border-[#4B4B4B]/20",
     },
     {
       label: "Call Success Rate",
       value: `${stats.success_rate}%`,
       change: stats.success_rate_label,
       icon: TrendingUp,
-      color: "text-[#002D5C]",
-      bg: "bg-[#002D5C]/10 border-[#002D5C]/25",
+      color: "text-[#4682B4]",
+      bg: "bg-[#4682B4]/10 border-[#4682B4]/25",
     },
   ];
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto text-[#333333]">
+    <div className="space-y-8 max-w-7xl mx-auto text-[#4B4B4B]">
       {/* Welcome */}
-      <div className="relative overflow-hidden rounded-2xl border border-[#7D9B9F]/20 bg-gradient-to-br from-[#002D5C]/5 via-[#7D9B9F]/5 to-transparent p-6">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#002D5C]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="relative overflow-hidden rounded-2xl border border-[#A4C8E1]/20 bg-gradient-to-br from-[#4682B4]/5 via-[#A4C8E1]/5 to-transparent p-6">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#4682B4]/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative">
-          <p className="text-xs font-bold text-[#002D5C] uppercase tracking-widest mb-1">Welcome back</p>
-          <h1 className="text-2xl font-extrabold text-[#002D5C] mb-1">{getGreeting()}, {user.name} 👋</h1>
+          <p className="text-xs font-bold text-[#4682B4] uppercase tracking-widest mb-1">Welcome back</p>
+          <h1 className="text-2xl font-extrabold text-[#4682B4] mb-1">{getGreeting()}, {user.name} 👋</h1>
           <p className="text-sm text-zinc-600">
             {user.draft_count > 0 ? (
               <>
-                You have <span className="text-[#002D5C] font-semibold">{user.draft_count} email draft{user.draft_count !== 1 ? "s" : ""}</span> ready to send.
+                You have <span className="text-[#4682B4] font-semibold">{user.draft_count} email draft{user.draft_count !== 1 ? "s" : ""}</span> ready to send.
               </>
             ) : (
               <>Your dashboard is up to date. Start by recording a voice memo or generating an email.</>
@@ -200,11 +200,11 @@ export default function DashboardPage() {
         {statCards.map((stat) => {
           const Icon = stat.icon;
           return (
-            <Card key={stat.label} hoverEffect className="!p-5 bg-white border border-[#7D9B9F]/20">
+            <Card key={stat.label} hoverEffect className="!p-5 bg-white border border-[#A4C8E1]/20">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs text-zinc-500 font-medium mb-1">{stat.label}</p>
-                  <p className="text-3xl font-extrabold text-[#002D5C] mb-1">{stat.value}</p>
+                  <p className="text-3xl font-extrabold text-[#4682B4] mb-1">{stat.value}</p>
                   <p className="text-xs text-zinc-500">{stat.change}</p>
                 </div>
                 <div className={`p-2.5 rounded-xl border ${stat.bg}`}>
@@ -220,20 +220,20 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         {/* Quick actions */}
         <div className="xl:col-span-2 space-y-3">
-          <h2 className="text-sm font-bold text-[#002D5C] px-1">Quick Actions</h2>
+          <h2 className="text-sm font-bold text-[#4682B4] px-1">Quick Actions</h2>
           {quickActions.map((action) => {
             const Icon = action.icon;
             return (
               <Link key={action.href} href={action.href} id={`quick-${action.label.toLowerCase().replace(/\s/g, "-")}`}>
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-[#7D9B9F]/20 bg-white/65 hover:border-[#002D5C]/35 hover:bg-[#7D9B9F]/5 transition-all duration-200 group cursor-pointer">
+                <div className="flex items-center gap-4 p-4 rounded-xl border border-[#A4C8E1]/20 bg-white/65 hover:border-[#4682B4]/35 hover:bg-[#A4C8E1]/5 transition-all duration-200 group cursor-pointer">
                   <div className={`flex-shrink-0 p-3 rounded-xl bg-gradient-to-br ${action.gradient} shadow-md`}>
                     <Icon className="h-4 w-4 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[#002D5C]">{action.label}</p>
+                    <p className="text-sm font-semibold text-[#4682B4]">{action.label}</p>
                     <p className="text-xs text-zinc-500 truncate">{action.desc}</p>
                   </div>
-                  <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-[#002D5C] group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-zinc-400 group-hover:text-[#4682B4] group-hover:translate-x-0.5 transition-all duration-200 flex-shrink-0" />
                 </div>
               </Link>
             );
@@ -241,14 +241,14 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent activity */}
-        <Card className="xl:col-span-3 !p-0 overflow-hidden border border-[#7D9B9F]/20 bg-white shadow-sm shadow-[#7D9B9F]/10">
+        <Card className="xl:col-span-3 !p-0 overflow-hidden border border-[#A4C8E1]/20 bg-white shadow-sm shadow-[#A4C8E1]/10">
           <div className="p-5 border-b border-zinc-100">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-base text-[#002D5C]">Recent Activity</CardTitle>
+                <CardTitle className="text-base text-[#4682B4]">Recent Activity</CardTitle>
                 <CardDescription className="mt-0.5 text-zinc-500">Your latest actions and events</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" className="text-[#002D5C] hover:text-[#002D5C]/80 hover:bg-[#7D9B9F]/10">
+              <Button variant="ghost" size="sm" className="text-[#4682B4] hover:text-[#4682B4]/80 hover:bg-[#A4C8E1]/10">
                 <Clock className="h-3.5 w-3.5 mr-1.5" />
                 View all
               </Button>

@@ -86,19 +86,19 @@ export default function SettingsPage() {
   const initial = userInfo.name ? userInfo.name.charAt(0).toUpperCase() : "M";
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] bg-gradient-to-br from-[#FFFFFF] via-[#FFFFFF] to-[#F2F6F7] text-[#333333] p-4 sm:p-6 md:p-8 rounded-3xl">
+    <div className="min-h-screen bg-[#FFFFFF] bg-gradient-to-br from-[#FFFFFF] via-[#FFFFFF] to-[#F4F8FB] text-[#4B4B4B] p-4 sm:p-6 md:p-8 rounded-3xl">
       <div className="max-w-4xl mx-auto space-y-8">
         
         {/* Profile Header Card */}
-        <div className="bg-white border border-[#7D9B9F]/20 rounded-3xl p-6 shadow-sm shadow-[#7D9B9F]/10 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all">
+        <div className="bg-white border border-[#A4C8E1]/20 rounded-3xl p-6 shadow-sm shadow-[#A4C8E1]/10 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all">
           <div className="flex flex-col sm:flex-row items-center gap-5 w-full sm:w-auto">
             {/* Avatar block with green badge */}
             <div className="relative">
-              <div className="h-20 w-20 rounded-2xl bg-[#002D5C] flex items-center justify-center text-white text-3xl font-extrabold shadow-md">
+              <div className="h-20 w-20 rounded-2xl bg-[#4682B4] flex items-center justify-center text-white text-3xl font-extrabold shadow-md">
                 {initial}
               </div>
-              <div className="absolute -bottom-1.5 -right-1.5 h-6 w-6 rounded-full bg-[#002D5C] border-2 border-white flex items-center justify-center shadow-md">
-                <ShieldCheck className="h-3.5 w-3.5 text-white" />
+              <div className="absolute -bottom-1.5 -right-1.5 h-6 w-6 rounded-full bg-[#A8D8B9] border-2 border-white flex items-center justify-center shadow-md">
+                <ShieldCheck className="h-3.5 w-3.5 text-[#4B4B4B]" />
               </div>
             </div>
 
@@ -110,7 +110,7 @@ export default function SettingsPage() {
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-3 py-1.5 text-sm bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:border-[#002D5C] text-[#333333] font-semibold"
+                    className="w-full px-3 py-1.5 text-sm bg-[#F4F8FB] border border-[#A4C8E1]/40 rounded-xl focus:outline-none focus:border-[#4682B4] text-[#4B4B4B] font-semibold"
                     placeholder="Enter name"
                     autoFocus
                   />
@@ -118,7 +118,7 @@ export default function SettingsPage() {
                     <button 
                       onClick={handleSaveProfile}
                       disabled={saving}
-                      className="p-2 bg-[#002D5C] hover:bg-[#002D5C]/90 text-white rounded-xl shadow-sm transition-all"
+                      className="p-2 bg-[#4682B4] hover:bg-[#4682B4]/90 text-white rounded-xl shadow-sm transition-all"
                     >
                       <Check className="h-4 w-4" />
                     </button>
@@ -132,11 +132,11 @@ export default function SettingsPage() {
                 </div>
               ) : (
                 <>
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-[#002D5C] leading-tight">
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4682B4] leading-tight">
                     {userInfo.name}
                   </h1>
-                  <div className="flex items-center justify-center sm:justify-start gap-1.5 text-[#4B4B4D] text-sm mt-1">
-                    <Mail className="h-3.5 w-3.5 text-[#7D9B9F]" />
+                  <div className="flex items-center justify-center sm:justify-start gap-1.5 text-[#4B4B4B] text-sm mt-1">
+                    <Mail className="h-3.5 w-3.5 text-[#A4C8E1]" />
                     <span>{userInfo.email}</span>
                   </div>
                 </>
@@ -147,7 +147,7 @@ export default function SettingsPage() {
           {!isEditing && (
             <button 
               onClick={startEditing}
-              className="px-6 py-2.5 bg-white border border-[#7D9B9F] hover:border-[#002D5C] rounded-full text-xs font-bold text-[#002D5C] shadow-sm transition-all active:scale-95 whitespace-nowrap"
+              className="px-6 py-2.5 bg-white border border-[#A4C8E1] hover:border-[#4682B4] rounded-full text-xs font-bold text-[#4682B4] shadow-sm transition-all active:scale-95 whitespace-nowrap"
             >
               Edit Profile
             </button>
@@ -159,22 +159,22 @@ export default function SettingsPage() {
           
           {/* Activity Section */}
           <div className="space-y-3">
-            <span className="text-[11px] font-bold tracking-wider text-[#4B4B4D] uppercase px-1">
+            <span className="text-[11px] font-bold tracking-wider text-[#4B4B4B] uppercase px-1">
               Activity
             </span>
-            <div className="bg-white border border-[#7D9B9F]/20 rounded-3xl shadow-sm shadow-[#7D9B9F]/10 overflow-hidden divide-y divide-zinc-100">
+            <div className="bg-white border border-[#A4C8E1]/20 rounded-3xl shadow-sm shadow-[#A4C8E1]/10 overflow-hidden divide-y divide-zinc-100">
               
               <div 
                 onClick={() => router.push("/dashboard/voice-upload")}
                 className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#002D5C]/10 text-[#002D5C] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-[#4682B4]/10 text-[#4682B4] flex items-center justify-center">
                     <Mic className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-[#333333]">Voice Uploads</span>
+                  <span className="text-sm font-bold text-[#4B4B4B]">Voice Uploads</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-[#7D9B9F]" />
+                <ChevronRight className="h-4 w-4 text-[#A4C8E1]" />
               </div>
 
               <div 
@@ -182,12 +182,12 @@ export default function SettingsPage() {
                 className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#7D9B9F]/15 text-[#002D5C] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-[#A4C8E1]/15 text-[#4682B4] flex items-center justify-center">
                     <Sliders className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-[#333333]">Agent Configs</span>
+                  <span className="text-sm font-bold text-[#4B4B4B]">Agent Configs</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-[#7D9B9F]" />
+                <ChevronRight className="h-4 w-4 text-[#A4C8E1]" />
               </div>
 
               <div 
@@ -195,12 +195,12 @@ export default function SettingsPage() {
                 className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#4B4B4D]/10 text-[#4B4B4D] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-[#4B4B4B]/10 text-[#4B4B4B] flex items-center justify-center">
                     <PhoneCall className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-[#333333]">Call History</span>
+                  <span className="text-sm font-bold text-[#4B4B4B]">Call History</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-[#7D9B9F]" />
+                <ChevronRight className="h-4 w-4 text-[#A4C8E1]" />
               </div>
 
             </div>
@@ -208,21 +208,21 @@ export default function SettingsPage() {
 
           {/* Preferences Section */}
           <div className="space-y-3">
-            <span className="text-[11px] font-bold tracking-wider text-[#4B4B4D] uppercase px-1">
+            <span className="text-[11px] font-bold tracking-wider text-[#4B4B4B] uppercase px-1">
               Preferences
             </span>
-            <div className="bg-white border border-[#7D9B9F]/20 rounded-3xl shadow-sm shadow-[#7D9B9F]/10 overflow-hidden divide-y divide-zinc-100">
+            <div className="bg-white border border-[#A4C8E1]/20 rounded-3xl shadow-sm shadow-[#A4C8E1]/10 overflow-hidden divide-y divide-zinc-100">
               
               <div className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#7D9B9F]/15 text-[#4B4B4D] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-[#A4C8E1]/15 text-[#4B4B4B] flex items-center justify-center">
                     {darkMode ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
                   </div>
-                  <span className="text-sm font-bold text-[#333333]">Dark Mode</span>
+                  <span className="text-sm font-bold text-[#4B4B4B]">Dark Mode</span>
                 </div>
                 <button 
                   onClick={() => setDarkMode(!darkMode)}
-                  className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none ${darkMode ? 'bg-[#002D5C]' : 'bg-[#7D9B9F]/30'}`}
+                  className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none ${darkMode ? 'bg-[#4682B4]' : 'bg-[#A4C8E1]/30'}`}
                 >
                   <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${darkMode ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
@@ -230,14 +230,14 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#002D5C]/10 text-[#002D5C] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-[#4682B4]/10 text-[#4682B4] flex items-center justify-center">
                     <Bell className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-[#333333]">Notifications</span>
+                  <span className="text-sm font-bold text-[#4B4B4B]">Notifications</span>
                 </div>
                 <button 
                   onClick={() => setNotifications(!notifications)}
-                  className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none ${notifications ? 'bg-[#002D5C]' : 'bg-[#7D9B9F]/30'}`}
+                  className={`w-10 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none ${notifications ? 'bg-[#A8D8B9]' : 'bg-[#A4C8E1]/30'}`}
                 >
                   <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${notifications ? 'translate-x-5' : 'translate-x-0'}`} />
                 </button>
@@ -248,19 +248,19 @@ export default function SettingsPage() {
 
           {/* Support & Legal Section */}
           <div className="space-y-3">
-            <span className="text-[11px] font-bold tracking-wider text-[#4B4B4D] uppercase px-1">
+            <span className="text-[11px] font-bold tracking-wider text-[#4B4B4B] uppercase px-1">
               Support & Legal
             </span>
-            <div className="bg-white border border-[#7D9B9F]/20 rounded-3xl shadow-sm shadow-[#7D9B9F]/10 overflow-hidden">
+            <div className="bg-white border border-[#A4C8E1]/20 rounded-3xl shadow-sm shadow-[#A4C8E1]/10 overflow-hidden">
               
               <div className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-[#7D9B9F]/15 text-[#002D5C] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-2xl bg-[#A4C8E1]/15 text-[#4682B4] flex items-center justify-center">
                     <MessageSquare className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-[#333333]">Feedback</span>
+                  <span className="text-sm font-bold text-[#4B4B4B]">Feedback</span>
                 </div>
-                <ChevronRight className="h-4 w-4 text-[#7D9B9F]" />
+                <ChevronRight className="h-4 w-4 text-[#A4C8E1]" />
               </div>
 
             </div>
