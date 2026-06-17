@@ -6,9 +6,9 @@ import {
   User, 
   ShieldCheck, 
   Mail, 
-  Cloud, 
-  Bookmark, 
-  History, 
+  Mic, 
+  Sliders, 
+  PhoneCall, 
   Sun, 
   Moon, 
   Bell, 
@@ -16,8 +16,7 @@ import {
   LogOut, 
   ChevronRight,
   Check,
-  X,
-  Edit3
+  X
 } from "lucide-react";
 import { logout, getUserInfo, isLoggedIn, fetchMe, saveUserInfo, updateProfile } from "@/lib/api";
 
@@ -165,32 +164,41 @@ export default function SettingsPage() {
             </span>
             <div className="bg-white border border-emerald-100/30 rounded-3xl shadow-sm shadow-emerald-100/40 overflow-hidden divide-y divide-zinc-100/80">
               
-              <div className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all">
+              <div 
+                onClick={() => router.push("/dashboard/voice-upload")}
+                className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all animate-none"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-blue-50/70 text-blue-500 flex items-center justify-center">
-                    <Cloud className="h-5 w-5" />
+                    <Mic className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-zinc-800">My Uploads</span>
+                  <span className="text-sm font-bold text-zinc-800">Voice Uploads</span>
                 </div>
                 <ChevronRight className="h-4 w-4 text-zinc-400" />
               </div>
 
-              <div className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all">
+              <div 
+                onClick={() => router.push("/dashboard/agent-configs")}
+                className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-emerald-50/70 text-emerald-500 flex items-center justify-center">
-                    <Bookmark className="h-5 w-5" />
+                    <Sliders className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-zinc-800">Saved Notes</span>
+                  <span className="text-sm font-bold text-zinc-800">Agent Configs</span>
                 </div>
                 <ChevronRight className="h-4 w-4 text-zinc-400" />
               </div>
 
-              <div className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all">
+              <div 
+                onClick={() => router.push("/dashboard/call-logs")}
+                className="flex items-center justify-between p-4 hover:bg-zinc-50/50 cursor-pointer transition-all"
+              >
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-2xl bg-orange-50/70 text-orange-500 flex items-center justify-center">
-                    <History className="h-5 w-5" />
+                    <PhoneCall className="h-5 w-5" />
                   </div>
-                  <span className="text-sm font-bold text-zinc-800">Download History</span>
+                  <span className="text-sm font-bold text-zinc-800">Call History</span>
                 </div>
                 <ChevronRight className="h-4 w-4 text-zinc-400" />
               </div>
