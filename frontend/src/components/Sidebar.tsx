@@ -60,7 +60,12 @@ const navSections = [
   },
 ];
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileClose }) => {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
@@ -127,28 +132,39 @@ export const Sidebar: React.FC = () => {
     .slice(0, 2);
 
   return (
-    <aside
-      className={`relative flex flex-col border-r border-white/[0.05] transition-all duration-300 ease-in-out ${
-        collapsed ? "w-[68px]" : "w-[240px]"
-      } min-h-screen shrink-0`}
-      style={{ background: "#0d1117" }}
-    >
-      {/* Subtle top gradient line */}
-      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
+    <>
+      {/* Backdrop for mobile */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          onClick={onMobileClose}
+        />
+      )}
 
-      {/* Toggle button */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-7 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-[#1F2937] border border-white/10 text-gray-400 hover:text-white hover:border-violet-500/40 hover:shadow-[0_0_12px_rgba(139,92,246,0.3)] transition-all duration-200 shadow-lg"
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        id="sidebar-toggle"
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 md:relative md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col border-r border-white/[0.05] min-h-screen shrink-0 ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        } ${
+          collapsed ? "md:w-[68px]" : "md:w-[240px]"
+        } w-[240px]`}
+        style={{ background: "#0d1117" }}
       >
-        {collapsed ? (
-          <ChevronRight className="h-3 w-3" />
-        ) : (
-          <ChevronLeft className="h-3 w-3" />
-        )}
-      </button>
+        {/* Subtle top gradient line */}
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
+
+        {/* Toggle button */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute -right-3 top-7 z-20 hidden md:flex h-6 w-6 items-center justify-center rounded-full bg-[#1F2937] border border-white/10 text-gray-400 hover:text-white hover:border-violet-500/40 hover:shadow-[0_0_12px_rgba(139,92,246,0.3)] transition-all duration-200 shadow-lg"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          id="sidebar-toggle"
+        >
+          {collapsed ? (
+            <ChevronRight className="h-3 w-3" />
+          ) : (
+            <ChevronLeft className="h-3 w-3" />
+          )}
+        </button>
 
       {/* Logo */}
       <div
@@ -211,6 +227,7 @@ export const Sidebar: React.FC = () => {
                         : "text-gray-500 hover:text-gray-200 hover:bg-white/[0.04] border border-transparent"
                     } ${collapsed ? "justify-center" : ""}`}
                     id={`nav-${item.label.toLowerCase().replace(/\s/g, "-")}`}
+                    onClick={onMobileClose}
                   >
                     {/* Active left bar */}
                     {isActive && (
@@ -338,5 +355,6 @@ export const Sidebar: React.FC = () => {
         </button>
       </div>
     </aside>
-  );
+  </>
+);
 };

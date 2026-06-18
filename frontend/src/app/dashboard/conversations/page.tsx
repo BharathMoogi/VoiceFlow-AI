@@ -210,6 +210,15 @@ export default function ConversationsPage() {
     setStreamingContent("");
 
     let currentConvId = activeConvId;
+    let userMsgAdded = false;
+
+    // Always show user message immediately (optimistic)
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: textToSend,
+      created_at: new Date().toISOString()
+    };
     
     try {
       if (!userId) {
@@ -224,21 +233,19 @@ export default function ConversationsPage() {
         }
       }
 
-      // Optimistically add user message
-      const userMsg: Message = {
-        id: Date.now().toString(),
-        role: "user",
-        content: textToSend,
-        created_at: new Date().toISOString()
-      };
+      // Optimistically add user message to UI
       setMessages((prev) => [...prev, userMsg]);
+      userMsgAdded = true;
 
-      // Save user message to DB in background
+      // Save user message to DB
       await saveMessageToDb(currentConvId, "user", textToSend);
 
-      // Prepare message history for AI
-      const apiMessages = messages.map(m => ({ role: m.role, content: m.content }));
-      apiMessages.push({ role: "user", content: textToSend });
+      // Build message history for AI using current snapshot + new message
+      // We use a local snapshot to avoid stale closure issues
+      const currentMessages = await new Promise<Message[]>((resolve) => {
+        setMessages((prev) => { resolve(prev); return prev; });
+      });
+      const apiMessages = currentMessages.map(m => ({ role: m.role, content: m.content }));
       
       // System prompt
       const payload = [
@@ -254,10 +261,10 @@ export default function ConversationsPage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to generate response: HTTP ${response.status}`);
+        throw new Error(errorData.error || `Failed to generate AI response (HTTP ${response.status})`);
       }
 
-      if (!response.body) throw new Error("No response body");
+      if (!response.body) throw new Error("No response body from AI");
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -272,39 +279,44 @@ export default function ConversationsPage() {
         setStreamingContent(fullContent);
       }
 
-      // Finished streaming, save to DB
-      const aiMsg = await saveMessageToDb(currentConvId, "assistant", fullContent);
-      if (aiMsg) {
-        setMessages((prev) => [...prev, aiMsg]);
+      if (!fullContent.trim()) {
+        throw new Error("AI returned an empty response. Please try again.");
       }
+
+      // Finished streaming — commit to DB and state
+      const aiMsg = await saveMessageToDb(currentConvId, "assistant", fullContent);
+      setMessages((prev) => [...prev, aiMsg]);
       setStreamingContent("");
     } catch (error: any) {
       console.error("Chat error:", error);
+      setStreamingContent("");
       const errorMsg = error?.message || "Sorry, I encountered an error while processing your request.";
-      
-      // If we failed before we had a conversation ID, optimistically display the user's message anyway,
-      // then display the system error message directly so they see what happened.
-      if (!currentConvId) {
-        const userMsg: Message = {
-          id: Date.now().toString(),
-          role: "user",
-          content: textToSend,
-          created_at: new Date().toISOString()
-        };
+
+      if (!userMsgAdded) {
+        // Show user message + error together
         const systemErrorMsg: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: `⚠️ Error: ${errorMsg}`,
+          content: `⚠️ ${errorMsg}`,
           created_at: new Date().toISOString()
         };
         setMessages((prev) => [...prev, userMsg, systemErrorMsg]);
       } else {
-        const aiMsg = await saveMessageToDb(currentConvId, "assistant", errorMsg);
-        if (aiMsg) setMessages((prev) => [...prev, aiMsg]);
+        // User message is already visible; just show error as AI reply
+        const errMsgObj: Message = {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: `⚠️ ${errorMsg}`,
+          created_at: new Date().toISOString()
+        };
+        setMessages((prev) => [...prev, errMsgObj]);
+        // Persist error to DB if we have a conversation
+        if (currentConvId) {
+          saveMessageToDb(currentConvId, "assistant", `⚠️ ${errorMsg}`);
+        }
       }
     } finally {
       setIsTyping(false);
-      // Re-focus input
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   };

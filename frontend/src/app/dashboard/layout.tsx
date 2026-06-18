@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, ChevronRight, Sparkles, Zap } from "lucide-react";
+import { Bell, ChevronRight, Sparkles, Zap, Menu } from "lucide-react";
 import { Sidebar } from "@/components/Sidebar";
 
 function getBreadcrumbs(pathname: string) {
@@ -27,6 +27,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const crumbs = getBreadcrumbs(pathname);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen text-white" style={{ background: "#030712" }}>
@@ -41,15 +42,25 @@ export default function DashboardLayout({
 
       {/* Sidebar */}
       <div className="relative z-10">
-        <Sidebar />
+        <Sidebar mobileOpen={mobileSidebarOpen} onMobileClose={() => setMobileSidebarOpen(false)} />
       </div>
 
       {/* Main column */}
       <div className="relative z-10 flex-1 flex flex-col min-w-0">
         {/* Top header */}
         <header className="flex items-center justify-between px-6 py-3.5 border-b border-white/[0.05] sticky top-0 z-30 glass">
-          {/* Breadcrumbs */}
-          <nav className="flex items-center gap-1.5 text-sm">
+          <div className="flex items-center">
+            {/* Hamburger button for mobile */}
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="p-2 -ml-2 mr-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/[0.05] md:hidden transition-all duration-200"
+              aria-label="Open sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+
+            {/* Breadcrumbs */}
+            <nav className="flex items-center gap-1.5 text-sm">
             {crumbs.map((crumb, i) => (
               <React.Fragment key={crumb.href}>
                 {i > 0 && (
@@ -70,6 +81,7 @@ export default function DashboardLayout({
               </React.Fragment>
             ))}
           </nav>
+        </div>
 
           {/* Right controls */}
           <div className="flex items-center gap-2.5">

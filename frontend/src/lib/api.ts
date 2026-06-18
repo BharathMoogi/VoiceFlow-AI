@@ -62,8 +62,9 @@ export async function login(email: string, password: string): Promise<AuthTokens
   if (error) throw new Error(error.message);
   const token = data?.accessToken || "";
   if (!token) throw new Error("Login failed: no session returned. Please verify your email first.");
-  // Save email immediately so dashboard can show it without an extra API call
-  saveUserInfo(email.split('@')[0], email);
+  // SDK returns user.name directly on signInWithPassword response
+  const displayName = (data?.user as any)?.name || email.split('@')[0];
+  saveUserInfo(displayName, email);
   return {
     access_token: token,
     refresh_token: data?.refreshToken || "",
@@ -86,18 +87,18 @@ export async function register(
   email: string,
   password: string
 ): Promise<AuthTokens> {
+  // InsForge SDK signUp() takes top-level `name` field (not options.data)
   const { data, error } = await insforge.auth.signUp({
     email,
     password,
-    options: {
-      data: { full_name }
-    }
+    name: full_name,
   });
   if (error) throw new Error(error.message);
   const token = data?.accessToken || "";
   if (!token) {
     throw new Error("Registration succeeded but verification is required. Please verify your email first.");
   }
+  saveUserInfo(full_name, email);
   return {
     access_token: token,
     refresh_token: data?.refreshToken || "",
@@ -139,10 +140,11 @@ export async function fetchMe(redirectOnFailure = false): Promise<UserProfile> {
 }
 
 export async function updateProfile(full_name: string) {
-  const { data, error } = await insforge.auth.updateUser({ data: { full_name } });
+  // InsForge SDK uses setProfile() — updateUser() does not exist
+  const { data, error } = await insforge.auth.setProfile({ nickname: full_name });
   if (error) throw new Error(error.message);
-  // data.user can be null on some InsForge SDK versions — fall back gracefully
-  const email = data?.user?.email || getUserInfo().email || '';
+  // Always persist locally so the sidebar reflects the change immediately
+  const email = getUserInfo().email || '';
   saveUserInfo(full_name, email);
   return data;
 }

@@ -1,5 +1,25 @@
 import { NextResponse } from "next/server";
 
+// Models to try in order (primary first, then fallbacks)
+const MODELS = [
+  "google/gemma-4-31b-it:free",
+  "meta-llama/llama-3.3-70b-instruct:free",
+  "meta-llama/llama-3.2-3b-instruct:free",
+];
+
+async function callOpenRouter(apiKey: string, model: string, messages: any[], stream: boolean) {
+  return fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": "https://speaktomail.vercel.app",
+      "X-Title": "VoiceFlow AI",
+    },
+    body: JSON.stringify({ model, messages, stream }),
+  });
+}
+
 export async function POST(req: Request) {
   try {
     const { messages } = await req.json();
@@ -13,38 +33,41 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "OpenRouter API Key not configured" }, { status: 500 });
     }
 
-    // Format messages for OpenRouter (assumes user/assistant roles are already correct)
     const formattedMessages = messages.map((m: any) => ({
       role: m.role,
       content: m.content,
     }));
 
-    // Start a streaming request to OpenRouter
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openRouterApiKey}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://speaktomail.vercel.app", // Optional, for OpenRouter analytics
-        "X-Title": "VoiceFlow AI", // Optional, for OpenRouter analytics
-      },
-      body: JSON.stringify({
-        model: "deepseek/deepseek-chat:free", // Using DeepSeek V3 (free tier on OpenRouter)
-        messages: formattedMessages,
-        stream: true,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("OpenRouter Error:", errorText);
-      return NextResponse.json({ error: "Failed to generate response" }, { status: response.status });
+    // Try each model in order until one works
+    let response: Response | null = null;
+    let lastError = "";
+    for (const model of MODELS) {
+      const attempt = await callOpenRouter(openRouterApiKey, model, formattedMessages, true);
+      if (attempt.ok) {
+        response = attempt;
+        break;
+      }
+      // Read error and try next model on 404/429
+      const errorText = await attempt.text();
+      lastError = errorText;
+      console.warn(`Model ${model} failed (${attempt.status}):`, errorText);
+      if (attempt.status !== 404 && attempt.status !== 429) {
+        // Non-retryable error — stop trying
+        break;
+      }
     }
+
+    if (!response) {
+      console.error("All models failed. Last error:", lastError);
+      return NextResponse.json({ error: "AI service is temporarily unavailable. Please try again in a moment." }, { status: 503 });
+    }
+
+    const usedResponse = response;
 
     // Create a readable stream from the response
     const stream = new ReadableStream({
       async start(controller) {
-        const reader = response.body?.getReader();
+        const reader = usedResponse.body?.getReader();
         if (!reader) {
           controller.close();
           return;
