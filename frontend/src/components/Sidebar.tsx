@@ -133,17 +133,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileCl
 
   return (
     <>
-      {/* Backdrop for mobile */}
+      {/* Backdrop for mobile — sits below sidebar but above content */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[199] md:hidden"
           onClick={onMobileClose}
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 md:relative md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col border-r border-white/[0.05] min-h-screen shrink-0 bg-[#0d1117] isolate ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed inset-y-0 left-0 z-[200] md:relative md:z-auto md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col border-r border-white/[0.05] min-h-screen shrink-0 bg-[#0d1117] ${
+          mobileOpen ? "translate-x-0 shadow-2xl shadow-black/60" : "-translate-x-full"
         } ${
           collapsed ? "md:w-[68px]" : "md:w-[240px]"
         } w-[240px]`}

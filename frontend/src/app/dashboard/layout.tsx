@@ -41,7 +41,7 @@ export default function DashboardLayout({
       </div>
 
       {/* Sidebar */}
-      <div className="relative z-10">
+      <div>
         <Sidebar mobileOpen={mobileSidebarOpen} onMobileClose={() => setMobileSidebarOpen(false)} />
       </div>
 
