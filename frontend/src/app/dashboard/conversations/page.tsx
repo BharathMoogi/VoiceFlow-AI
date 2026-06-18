@@ -249,7 +249,7 @@ export default function ConversationsPage() {
       
       // System prompt
       const payload = [
-        { role: "system", content: "You are VoiceFlow AI, a helpful, professional AI assistant built by Bharath Moogi. Your primary goal is to help users write, edit, and improve emails, as well as answer general questions." },
+        { role: "system", content: "You are Saarthi, a helpful, professional AI assistant built by Bharath Moogi. Your primary goal is to help users write, edit, and improve emails, as well as answer general questions." },
         ...apiMessages
       ];
 
@@ -423,7 +423,7 @@ export default function ConversationsPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-xs font-semibold text-gray-200 truncate">{conv.title}</p>
-                    <p className="text-[11px] text-gray-500 truncate mt-0.5">VoiceFlow Chat</p>
+                    <p className="text-[11px] text-gray-500 truncate mt-0.5">Saarthi Chat</p>
                   </div>
                 </div>
                 <span className="text-[10px] text-gray-600 flex-shrink-0">{formatTime(conv.updated_at)}</span>
@@ -449,11 +449,11 @@ export default function ConversationsPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-white">
-                {activeConvId ? conversations.find(c => c.id === activeConvId)?.title : "New Conversation"}
+                Saarthi
               </p>
               <div className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <p className="text-[11px] text-emerald-400 font-medium">DeepSeek AI Active</p>
+                <p className="text-[11px] text-emerald-400 font-medium">Saarthi Active</p>
               </div>
             </div>
           </div>
@@ -557,7 +557,7 @@ export default function ConversationsPage() {
             
             <textarea
               ref={inputRef}
-              placeholder="Message VoiceFlow AI..."
+              placeholder="Message Saarthi..."
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => {
@@ -584,7 +584,7 @@ export default function ConversationsPage() {
             </Button>
           </div>
           <p className="text-[10px] text-gray-500 mt-2 text-center">
-            VoiceFlow AI can make mistakes. Consider verifying important information.
+            Saarthi can make mistakes. Consider verifying important information.
           </p>
         </div>
       </div>
