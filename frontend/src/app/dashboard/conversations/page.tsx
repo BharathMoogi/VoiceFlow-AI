@@ -126,27 +126,34 @@ export default function ConversationsPage() {
   };
 
   const createNewConversation = async (firstMessageText: string) => {
-    if (!userId) return null;
+    if (!userId) {
+      console.error("createNewConversation failed: userId is null");
+      throw new Error("User session is not initialized. Please refresh or sign in again.");
+    }
     
     const title = firstMessageText.slice(0, 30) + (firstMessageText.length > 30 ? "..." : "");
-    const { data, error } = await insforge
-      .from("conversations")
-      .insert([{ user_id: userId, title }])
-      .select()
-      .single();
-    
-    if (error) {
-      console.error("Failed to create conversation:", error);
-      alert("Database error: " + error.message);
-      return null;
+    try {
+      const { data, error } = await insforge
+        .from("conversations")
+        .insert([{ user_id: userId, title }])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error("Failed to create conversation:", error);
+        throw new Error(`Database error creating conversation: ${error.message} (Code: ${error.code || 'unknown'})`);
+      }
+      
+      if (data) {
+        setConversations((prev) => [data, ...prev]);
+        setActiveConvId(data.id);
+        return data.id;
+      }
+      throw new Error("Database insert succeeded but returned no conversation data.");
+    } catch (err: any) {
+      console.error("Exception in createNewConversation:", err);
+      throw err;
     }
-    
-    if (data) {
-      setConversations((prev) => [data, ...prev]);
-      setActiveConvId(data.id);
-      return data.id;
-    }
-    return null;
   };
 
   const saveMessageToDb = async (convId: string, role: string, content: string) => {
@@ -198,38 +205,41 @@ export default function ConversationsPage() {
 
     let currentConvId = activeConvId;
     
-    // Create new conversation if none selected
-    if (!currentConvId) {
-      currentConvId = await createNewConversation(textToSend);
-      if (!currentConvId) {
-        setIsTyping(false);
-        return;
-      }
-    }
-
-    // Optimistically add user message
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: textToSend,
-      created_at: new Date().toISOString()
-    };
-    setMessages((prev) => [...prev, userMsg]);
-
-    // Save user message to DB in background
-    await saveMessageToDb(currentConvId, "user", textToSend);
-
-    // Prepare message history for AI
-    const apiMessages = messages.map(m => ({ role: m.role, content: m.content }));
-    apiMessages.push({ role: "user", content: textToSend });
-    
-    // System prompt (optional, but good for setting persona)
-    const payload = [
-      { role: "system", content: "You are VoiceFlow AI, a helpful, professional AI assistant built by Bharath Moogi. Your primary goal is to help users write, edit, and improve emails, as well as answer general questions." },
-      ...apiMessages
-    ];
-
     try {
+      if (!userId) {
+        throw new Error("User authentication is not loaded. Please wait a moment or sign in again.");
+      }
+
+      // Create new conversation if none selected
+      if (!currentConvId) {
+        currentConvId = await createNewConversation(textToSend);
+        if (!currentConvId) {
+          throw new Error("Failed to initialize conversation.");
+        }
+      }
+
+      // Optimistically add user message
+      const userMsg: Message = {
+        id: Date.now().toString(),
+        role: "user",
+        content: textToSend,
+        created_at: new Date().toISOString()
+      };
+      setMessages((prev) => [...prev, userMsg]);
+
+      // Save user message to DB in background
+      await saveMessageToDb(currentConvId, "user", textToSend);
+
+      // Prepare message history for AI
+      const apiMessages = messages.map(m => ({ role: m.role, content: m.content }));
+      apiMessages.push({ role: "user", content: textToSend });
+      
+      // System prompt
+      const payload = [
+        { role: "system", content: "You are VoiceFlow AI, a helpful, professional AI assistant built by Bharath Moogi. Your primary goal is to help users write, edit, and improve emails, as well as answer general questions." },
+        ...apiMessages
+      ];
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -264,10 +274,28 @@ export default function ConversationsPage() {
       setStreamingContent("");
     } catch (error: any) {
       console.error("Chat error:", error);
-      // Fallback message
       const errorMsg = error?.message || "Sorry, I encountered an error while processing your request.";
-      const aiMsg = await saveMessageToDb(currentConvId, "assistant", errorMsg);
-      if (aiMsg) setMessages((prev) => [...prev, aiMsg]);
+      
+      // If we failed before we had a conversation ID, optimistically display the user's message anyway,
+      // then display the system error message directly so they see what happened.
+      if (!currentConvId) {
+        const userMsg: Message = {
+          id: Date.now().toString(),
+          role: "user",
+          content: textToSend,
+          created_at: new Date().toISOString()
+        };
+        const systemErrorMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          role: "assistant",
+          content: `⚠️ Error: ${errorMsg}`,
+          created_at: new Date().toISOString()
+        };
+        setMessages((prev) => [...prev, userMsg, systemErrorMsg]);
+      } else {
+        const aiMsg = await saveMessageToDb(currentConvId, "assistant", errorMsg);
+        if (aiMsg) setMessages((prev) => [...prev, aiMsg]);
+      }
     } finally {
       setIsTyping(false);
       // Re-focus input
