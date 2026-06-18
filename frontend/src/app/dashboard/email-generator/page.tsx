@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Zap,
   Copy,
@@ -47,6 +47,17 @@ export default function EmailGeneratorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const draft = sessionStorage.getItem("voiceflow_email_draft");
+    if (draft) {
+      setGeneratedEmail({
+        subject: "Draft from VoiceFlow AI",
+        body: draft
+      });
+      sessionStorage.removeItem("voiceflow_email_draft");
+    }
+  }, []);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
