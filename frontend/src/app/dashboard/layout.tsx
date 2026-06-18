@@ -32,7 +32,7 @@ export default function DashboardLayout({
   return (
     <div className="flex min-h-screen text-white" style={{ background: "#030712" }}>
       {/* Background ambient orbs */}
-      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] orb-purple opacity-40 rounded-full blur-3xl" />
         <div className="absolute top-1/3 -right-32 w-[500px] h-[500px] orb-blue opacity-30 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-1/3 w-[400px] h-[400px] orb-green opacity-20 rounded-full blur-3xl" />
