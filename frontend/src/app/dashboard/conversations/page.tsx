@@ -96,6 +96,9 @@ export default function ConversationsPage() {
       .eq("user_id", uid)
       .order("updated_at", { ascending: false });
     
+    if (error) {
+      console.error("Error fetching conversations:", error);
+    }
     if (data) {
       setConversations(data);
     }
@@ -108,6 +111,9 @@ export default function ConversationsPage() {
       .eq("conversation_id", convId)
       .order("created_at", { ascending: true });
     
+    if (error) {
+      console.error("Error fetching messages:", error);
+    }
     if (data) {
       setMessages(data);
     }
@@ -144,22 +150,43 @@ export default function ConversationsPage() {
   };
 
   const saveMessageToDb = async (convId: string, role: string, content: string) => {
-    const { data } = await insforge
-      .from("messages")
-      .insert([{ conversation_id: convId, role, content }])
-      .select()
-      .single();
-    
-    // Update conversation timestamp
-    await insforge
-      .from("conversations")
-      .update({ updated_at: new Date().toISOString() })
-      .eq("id", convId);
+    try {
+      const { data, error } = await insforge
+        .from("messages")
+        .insert([{ conversation_id: convId, role, content }])
+        .select()
+        .single();
       
-    // Re-fetch conversations to update order
-    if (userId) fetchConversations(userId);
-    
-    return data;
+      if (error) {
+        console.error("Failed to save message to database:", error);
+      }
+
+      // Update conversation timestamp
+      await insforge
+        .from("conversations")
+        .update({ updated_at: new Date().toISOString() })
+        .eq("id", convId);
+        
+      // Re-fetch conversations to update order
+      if (userId) fetchConversations(userId);
+      
+      return data || {
+        id: Date.now().toString(),
+        conversation_id: convId,
+        role,
+        content,
+        created_at: new Date().toISOString()
+      };
+    } catch (err) {
+      console.error("Exception saving message to database:", err);
+      return {
+        id: Date.now().toString(),
+        conversation_id: convId,
+        role,
+        content,
+        created_at: new Date().toISOString()
+      };
+    }
   };
 
   const handleSend = async () => {
@@ -209,6 +236,11 @@ export default function ConversationsPage() {
         body: JSON.stringify({ messages: payload }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to generate response: HTTP ${response.status}`);
+      }
+
       if (!response.body) throw new Error("No response body");
 
       const reader = response.body.getReader();
@@ -230,10 +262,10 @@ export default function ConversationsPage() {
         setMessages((prev) => [...prev, aiMsg]);
       }
       setStreamingContent("");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chat error:", error);
       // Fallback message
-      const errorMsg = "Sorry, I encountered an error while processing your request.";
+      const errorMsg = error?.message || "Sorry, I encountered an error while processing your request.";
       const aiMsg = await saveMessageToDb(currentConvId, "assistant", errorMsg);
       if (aiMsg) setMessages((prev) => [...prev, aiMsg]);
     } finally {
