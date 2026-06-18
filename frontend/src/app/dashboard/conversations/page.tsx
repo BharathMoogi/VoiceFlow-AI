@@ -74,11 +74,17 @@ export default function ConversationsPage() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const { data: { user } } = await insforge.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-        fetchConversations(user.id);
-      } else {
+      try {
+        const { data, error } = await insforge.auth.getCurrentUser();
+        if (data?.user) {
+          setUserId(data.user.id);
+          fetchConversations(data.user.id);
+        } else {
+          console.error("fetchUser: no active session found", error);
+          router.push("/login");
+        }
+      } catch (err) {
+        console.error("fetchUser exception:", err);
         router.push("/login");
       }
     };
