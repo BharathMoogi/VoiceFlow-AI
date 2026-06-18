@@ -50,7 +50,6 @@ const navSections = [
       { label: "Conversations",   href: "/dashboard/conversations",  icon: MessageSquare },
       { label: "Email Generator", href: "/dashboard/email-generator",icon: Mail },
       { label: "Voice Upload",    href: "/dashboard/voice-upload",   icon: Mic },
-      { label: "Translator",      href: "/dashboard/translator",     icon: Languages },
     ],
   },
   {
