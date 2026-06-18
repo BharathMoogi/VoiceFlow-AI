@@ -129,6 +129,12 @@ export default function ConversationsPage() {
       .select()
       .single();
     
+    if (error) {
+      console.error("Failed to create conversation:", error);
+      alert("Database error: " + error.message);
+      return null;
+    }
+    
     if (data) {
       setConversations((prev) => [data, ...prev]);
       setActiveConvId(data.id);
