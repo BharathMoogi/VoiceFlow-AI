@@ -621,3 +621,69 @@ export async function triggerCallCampaign(campaignId: string): Promise<void> {
     throw new Error(err.detail || "Failed to initiate call campaign");
   }
 }
+
+// ---------- Translator ----------
+
+export interface TranslateResponse {
+  translated_text: string;
+  detected_language?: string | null;
+  source_lang: string;
+  target_lang: string;
+}
+
+export async function translateText(
+  text: string,
+  sourceLang: string,
+  targetLang: string
+): Promise<TranslateResponse> {
+  const SYSTEM_PROMPT =
+    "You are an expert, fluent translator. Translate the given text accurately and naturally. " +
+    "Output a valid JSON object with exactly two keys: " +
+    "'translated_text' (the translated string) and " +
+    "'detected_language' (the ISO-639-1 language code of the source text, or null if not auto-detected). " +
+    "Return raw JSON only — no markdown fences.";
+
+  const sourceInstr =
+    sourceLang === "auto"
+      ? "Detect the source language automatically."
+      : `The source language is '${sourceLang}'.`;
+
+  const result = await insforge.ai.chat.completions.create({
+    model: "openai/gpt-4o-mini",
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      {
+        role: "user",
+        content: `${sourceInstr} Translate into language '${targetLang}'.\n\nText:\n${text}`,
+      },
+    ],
+    temperature: 0.3,
+    maxTokens: 2000,
+  });
+
+  const raw = (result.choices?.[0]?.message?.content ?? "").trim();
+
+  let clean = raw;
+  if (clean.startsWith("```json")) clean = clean.slice(7);
+  else if (clean.startsWith("```")) clean = clean.slice(3);
+  if (clean.endsWith("```")) clean = clean.slice(0, -3);
+  clean = clean.trim();
+
+  try {
+    const parsed = JSON.parse(clean);
+    return {
+      translated_text: parsed.translated_text ?? "",
+      detected_language: parsed.detected_language ?? null,
+      source_lang: sourceLang,
+      target_lang: targetLang,
+    };
+  } catch {
+    // Fallback: treat entire response as the translation
+    return {
+      translated_text: raw,
+      detected_language: null,
+      source_lang: sourceLang,
+      target_lang: targetLang,
+    };
+  }
+}

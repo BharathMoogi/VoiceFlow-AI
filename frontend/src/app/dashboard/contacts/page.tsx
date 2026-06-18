@@ -204,10 +204,10 @@ export default function ContactsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Users className="h-6 w-6 text-indigo-400" />
+            <Users className="h-6 w-6 text-violet-400" />
             Contacts & Parents
           </h1>
-          <p className="text-zinc-400 text-sm">
+          <p className="text-gray-400 text-sm">
             Manage parents, students, and contacts for automated voice campaigns.
           </p>
         </div>
@@ -249,7 +249,7 @@ export default function ContactsPage() {
 
       {/* CSV Preview Drawer / Box */}
       {csvFile && (
-        <Card className="border-indigo-500/30 bg-indigo-500/5">
+        <Card className="border-violet-500/30 bg-violet-500/5">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="text-base flex items-center gap-2 text-indigo-300">
@@ -260,23 +260,23 @@ export default function ContactsPage() {
                 Verify columns. Ensure you have 'name' and 'phone' column headers.
               </CardDescription>
             </div>
-            <button onClick={() => { setCsvFile(null); setCsvPreview([]); }} className="text-zinc-400 hover:text-white">
+            <button onClick={() => { setCsvFile(null); setCsvPreview([]); }} className="text-gray-400 hover:text-white">
               <X className="h-4 w-4" />
             </button>
           </CardHeader>
           <CardContent className="space-y-4">
             {csvPreview.length > 0 && (
-              <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950/50">
+              <div className="overflow-x-auto rounded-lg border border-white/[0.08] bg-zinc-950/50">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="border-b border-zinc-800 bg-zinc-900/60 text-zinc-400 uppercase font-semibold">
+                    <tr className="border-b border-white/[0.08] bg-zinc-900/60 text-gray-400 uppercase font-semibold">
                       <th className="p-2.5">Name</th>
                       <th className="p-2.5">Phone</th>
                       <th className="p-2.5">Email</th>
                       <th className="p-2.5">Notes</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-zinc-900/40 text-zinc-300">
+                  <tbody className="divide-y divide-zinc-900/40 text-gray-300">
                     {csvPreview.map((row, index) => (
                       <tr key={index}>
                         <td className="p-2.5 font-medium">{row.name || row.fullname || row.full_name || "—"}</td>
@@ -307,7 +307,7 @@ export default function ContactsPage() {
           <Card className="w-full max-w-md">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-lg">Add New Contact</CardTitle>
-              <button onClick={() => setShowAddForm(false)} className="text-zinc-500 hover:text-white">
+              <button onClick={() => setShowAddForm(false)} className="text-gray-500 hover:text-white">
                 <X className="h-4 w-4" />
               </button>
             </CardHeader>
@@ -336,12 +336,12 @@ export default function ContactsPage() {
                   disabled={submitting}
                 />
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-400 uppercase mb-1.5">Notes</label>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Notes</label>
                   <textarea
                     value={newNotes}
                     onChange={(e) => setNewNotes(e.target.value)}
                     placeholder="E.g. Student name: Alex, Grade 5"
-                    className="w-full min-h-[80px] rounded-lg border border-zinc-800 bg-zinc-950 p-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50"
+                    className="w-full min-h-[80px] rounded-lg border border-white/[0.08] bg-zinc-950 p-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50"
                     disabled={submitting}
                   />
                 </div>
@@ -361,35 +361,35 @@ export default function ContactsPage() {
 
       {/* Main Grid: Filters + List */}
       <Card className="!p-0 overflow-hidden">
-        <div className="p-5 border-b border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="p-5 border-b border-white/[0.08]/60 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full sm:max-w-xs">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <input
               type="text"
               placeholder="Search contacts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-zinc-950 border border-zinc-800/80 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
+              className="w-full pl-9 pr-4 py-2 bg-zinc-950 border border-white/[0.08]/80 rounded-lg text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/50"
             />
           </div>
           
-          <div className="text-xs text-zinc-500 font-medium">
+          <div className="text-xs text-gray-500 font-medium">
             Showing {filteredContacts.length} of {contacts.length} contacts
           </div>
         </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
-            <p className="text-zinc-400 text-sm">Loading contacts database...</p>
+            <Loader2 className="h-8 w-8 text-violet-400 animate-spin" />
+            <p className="text-gray-400 text-sm">Loading contacts database...</p>
           </div>
         ) : filteredContacts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
-            <div className="p-3 rounded-2xl bg-zinc-800/30 border border-zinc-800/50 mb-4 text-zinc-500">
+            <div className="p-3 rounded-2xl bg-zinc-800/30 border border-white/[0.08]/50 mb-4 text-gray-500">
               <Users className="h-6 w-6" />
             </div>
             <h3 className="text-base font-semibold text-white">No contacts found</h3>
-            <p className="text-xs text-zinc-500 mt-1 max-w-xs mx-auto">
+            <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
               {searchQuery ? "No contacts match your search query." : "Upload a CSV file or add contacts manually to begin."}
             </p>
           </div>
@@ -397,7 +397,7 @@ export default function ContactsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
-                <tr className="border-b border-zinc-800 bg-zinc-900/30 text-zinc-400 uppercase font-semibold text-xs tracking-wider">
+                <tr className="border-b border-white/[0.08] bg-zinc-900/30 text-gray-400 uppercase font-semibold text-xs tracking-wider">
                   <th className="px-6 py-4">Name</th>
                   <th className="px-6 py-4">Phone</th>
                   <th className="px-6 py-4">Email</th>
@@ -405,19 +405,19 @@ export default function ContactsPage() {
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-850/30 text-zinc-300">
+              <tbody className="divide-y divide-zinc-850/30 text-gray-300">
                 {filteredContacts.map((contact) => (
                   <tr key={contact.id} className="hover:bg-zinc-800/10 transition-colors duration-150">
                     <td className="px-6 py-4 font-medium text-white">{contact.name}</td>
                     <td className="px-6 py-4">{contact.phone}</td>
-                    <td className="px-6 py-4 text-zinc-400">{contact.email || "—"}</td>
-                    <td className="px-6 py-4 max-w-[250px] truncate text-zinc-500" title={contact.notes}>
+                    <td className="px-6 py-4 text-gray-400">{contact.email || "—"}</td>
+                    <td className="px-6 py-4 max-w-[250px] truncate text-gray-500" title={contact.notes}>
                       {contact.notes || "—"}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button 
                         onClick={() => handleDelete(contact.id)}
-                        className="p-1.5 rounded-lg text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200"
+                        className="p-1.5 rounded-lg text-gray-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200"
                         title="Delete contact"
                       >
                         <Trash2 className="h-4 w-4" />

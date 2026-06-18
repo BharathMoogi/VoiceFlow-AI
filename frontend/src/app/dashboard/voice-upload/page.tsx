@@ -405,10 +405,10 @@ export default function VoiceUploadPage() {
       {/* Header */}
       <div>
         <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <Mic className="h-5 w-5 text-indigo-400" />
+          <Mic className="h-5 w-5 text-violet-400" />
           Voice Upload &amp; Transcription
         </h1>
-        <p className="text-sm text-zinc-500 mt-0.5">
+        <p className="text-sm text-gray-500 mt-0.5">
           Record your voice or upload an audio file — AI will transcribe it and write a polished email.
         </p>
       </div>
@@ -427,8 +427,8 @@ export default function VoiceUploadPage() {
                     <div className={`h-9 w-9 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
                       isErr    ? "bg-red-500/20 border-red-500 text-red-400" :
                       isDone   ? "bg-emerald-500 border-emerald-500 text-white" :
-                      isActive ? "border-indigo-500 bg-indigo-500/10 text-indigo-400" :
-                                 "border-zinc-700 bg-transparent text-zinc-600"
+                      isActive ? "border-violet-500 bg-violet-500/10 text-violet-400" :
+                                 "border-white/[0.08] bg-transparent text-gray-600"
                     }`}>
                       {isErr    ? <AlertCircle className="h-4 w-4" /> :
                        isDone   ? <CheckCircle  className="h-4 w-4" /> :
@@ -436,12 +436,12 @@ export default function VoiceUploadPage() {
                                   <span className="text-xs font-bold">{i + 1}</span>}
                     </div>
                     <span className={`text-xs font-medium ${
-                      isErr ? "text-red-400" : isDone ? "text-emerald-400" : isActive ? "text-indigo-400" : "text-zinc-600"
+                      isErr ? "text-red-400" : isDone ? "text-emerald-400" : isActive ? "text-violet-400" : "text-gray-600"
                     }`}>{s.label}</span>
                   </div>
                   {i < PIPELINE_STAGES.length - 1 && (
                     <div className={`flex-1 h-0.5 mx-2 rounded-full transition-all duration-700 ${
-                      stage === "done" || (stageIdx > i) ? "bg-emerald-500" : "bg-zinc-800"
+                      stage === "done" || (stageIdx > i) ? "bg-emerald-500" : "bg-[#1F2937]"
                     }`} />
                   )}
                 </React.Fragment>
@@ -477,9 +477,9 @@ export default function VoiceUploadPage() {
             <div
               onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}
               className={`relative p-8 text-center border-2 border-dashed rounded-xl transition-all duration-300 cursor-pointer ${
-                isDragging         ? "border-indigo-500 bg-indigo-500/10 scale-[1.01]" :
-                isProcessing || isRecording ? "border-zinc-700 opacity-50 pointer-events-none" :
-                                   "border-zinc-800 hover:border-zinc-600 hover:bg-zinc-900/30"
+                isDragging         ? "border-violet-500 bg-violet-500/10 scale-[1.01]" :
+                isProcessing || isRecording ? "border-white/[0.08] opacity-50 pointer-events-none" :
+                                   "border-white/[0.08] hover:border-zinc-600 hover:bg-zinc-900/30"
               }`}
               onClick={() => !(isProcessing || isRecording) && fileInputRef.current?.click()}
               id="drag-drop-zone"
@@ -488,24 +488,24 @@ export default function VoiceUploadPage() {
                 className="hidden" onChange={handleFileChange} id="file-upload-input" />
               <div className="flex flex-col items-center gap-4">
                 <div className={`p-5 rounded-2xl transition-all duration-300 ${
-                  isDragging ? "bg-indigo-500/20 border border-indigo-500/40" : "bg-zinc-900/60 border border-zinc-800"
+                  isDragging ? "bg-violet-500/20 border border-violet-500/40" : "bg-zinc-900/60 border border-white/[0.08]"
                 }`}>
-                  <Upload className={`h-8 w-8 ${isDragging ? "text-indigo-400" : "text-zinc-500"}`} />
+                  <Upload className={`h-8 w-8 ${isDragging ? "text-violet-400" : "text-gray-500"}`} />
                 </div>
                 {audioFile ? (
                   <div>
                     <div className="flex items-center gap-2 justify-center">
-                      <FileAudio className="h-4 w-4 text-indigo-400" />
-                      <p className="text-sm font-semibold text-zinc-200 truncate max-w-[200px]">{audioFile.name}</p>
+                      <FileAudio className="h-4 w-4 text-violet-400" />
+                      <p className="text-sm font-semibold text-gray-200 truncate max-w-[200px]">{audioFile.name}</p>
                     </div>
-                    <p className="text-xs text-zinc-500 mt-1">{(audioFile.size / 1024).toFixed(0)} KB</p>
+                    <p className="text-xs text-gray-500 mt-1">{(audioFile.size / 1024).toFixed(0)} KB</p>
                   </div>
                 ) : (
                   <div>
-                    <p className="text-sm font-semibold text-zinc-300">
+                    <p className="text-sm font-semibold text-gray-300">
                       {isDragging ? "Drop your audio file here" : "Drag & drop an audio file"}
                     </p>
-                    <p className="text-xs text-zinc-500 mt-1">or click to browse — WAV, MP3, M4A, OGG, WEBM, FLAC</p>
+                    <p className="text-xs text-gray-500 mt-1">or click to browse — WAV, MP3, M4A, OGG, WEBM, FLAC</p>
                   </div>
                 )}
               </div>
@@ -513,9 +513,9 @@ export default function VoiceUploadPage() {
           </Card>
 
           <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-zinc-800" />
-            <span className="text-xs text-zinc-600 font-medium">or record live</span>
-            <div className="flex-1 h-px bg-zinc-800" />
+            <div className="flex-1 h-px bg-[#1F2937]" />
+            <span className="text-xs text-gray-600 font-medium">or record live</span>
+            <div className="flex-1 h-px bg-[#1F2937]" />
           </div>
 
           {/* Recorder */}
@@ -529,7 +529,7 @@ export default function VoiceUploadPage() {
                     key={i}
                     className={`flex-1 rounded-full transition-all ${
                       isRecording
-                        ? i % 2 === 0 ? "bg-gradient-to-t from-rose-700 to-rose-400" : "bg-gradient-to-t from-indigo-700 to-indigo-400"
+                        ? i % 2 === 0 ? "bg-gradient-to-t from-rose-700 to-rose-400" : "bg-gradient-to-t from-violet-700 to-violet-400"
                         : "bg-zinc-700"
                     }`}
                     style={{ height: `${h}%`, transitionDuration: isRecording ? "70ms" : "500ms" }}
@@ -544,11 +544,11 @@ export default function VoiceUploadPage() {
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
                       <span className="text-sm font-mono font-bold text-rose-400">{fmt(recordingSecs)}</span>
-                      <span className="text-xs text-zinc-600">recording</span>
+                      <span className="text-xs text-gray-600">recording</span>
                     </div>
-                    <span className="text-xs text-zinc-600">{fmt(MAX_SECS)} max</span>
+                    <span className="text-xs text-gray-600">{fmt(MAX_SECS)} max</span>
                   </div>
-                  <div className="w-full h-1 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="w-full h-1 bg-[#1F2937]rounded-full overflow-hidden">
                     <div className="h-full bg-gradient-to-r from-rose-600 to-pink-400 rounded-full transition-all duration-1000"
                       style={{ width: `${progress}%` }} />
                   </div>
@@ -557,11 +557,11 @@ export default function VoiceUploadPage() {
 
               {/* Live transcript preview */}
               {isRecording && liveText && (
-                <div className="w-full p-3 rounded-lg bg-zinc-900/60 border border-zinc-800">
-                  <p className="text-xs text-zinc-500 mb-1 flex items-center gap-1">
+                <div className="w-full p-3 rounded-lg bg-zinc-900/60 border border-white/[0.08]">
+                  <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
                     <Volume2 className="h-3 w-3" /> Live transcript
                   </p>
-                  <p className="text-xs text-zinc-300 leading-relaxed line-clamp-3">
+                  <p className="text-xs text-gray-300 leading-relaxed line-clamp-3">
                     {liveText}
                     <span className="inline-block w-0.5 h-3 bg-indigo-400 ml-0.5 animate-pulse align-middle" />
                   </p>
@@ -576,7 +576,7 @@ export default function VoiceUploadPage() {
                 className={`flex items-center gap-2.5 px-6 py-3 rounded-full text-sm font-semibold transition-all duration-200 shadow-lg disabled:opacity-40 disabled:pointer-events-none ${
                   isRecording
                     ? "bg-rose-600 hover:bg-rose-500 text-white shadow-rose-500/30 scale-105 ring-4 ring-rose-500/20"
-                    : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-500/30 hover:scale-105"
+                    : "bg-violet-600 hover:bg-violet-500 text-white shadow-indigo-500/30 hover:scale-105"
                 }`}
               >
                 {isRecording
@@ -584,7 +584,7 @@ export default function VoiceUploadPage() {
                   : <><Mic   className="h-4 w-4" />Start Recording</>}
               </button>
 
-              <p className="text-xs text-zinc-600 text-center">
+              <p className="text-xs text-gray-600 text-center">
                 {isRecording
                   ? "Click stop when done — auto-stops at 2 minutes"
                   : "Click to capture your voice (up to 2 minutes)"}
@@ -607,19 +607,19 @@ export default function VoiceUploadPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <FileAudio className="h-4 w-4 text-indigo-400" />
+                  <FileAudio className="h-4 w-4 text-violet-400" />
                   Transcript
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">
                   {displayText}
                   {stage === "recording" && (
                     <span className="inline-block w-0.5 h-4 bg-indigo-400 ml-0.5 animate-pulse align-middle" />
                   )}
                 </p>
                 {stage === "generating" && (
-                  <p className="text-xs text-zinc-500 mt-2 flex items-center gap-1.5">
+                  <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
                     <Loader2 className="h-3 w-3 animate-spin" />Generating email…
                   </p>
                 )}
@@ -632,7 +632,7 @@ export default function VoiceUploadPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="text-sm flex items-center gap-2">
-                  <FileAudio className="h-4 w-4 text-indigo-400" />
+                  <FileAudio className="h-4 w-4 text-violet-400" />
                   Transcript
                 </CardTitle>
               </CardHeader>
@@ -641,7 +641,7 @@ export default function VoiceUploadPage() {
                   {[90, 75, 85, 60, 70].map((w, i) => (
                     <div key={i} className="shimmer rounded h-3" style={{ width: `${w}%` }} />
                   ))}
-                  <p className="text-xs text-zinc-500 mt-2 flex items-center gap-1.5">
+                  <p className="text-xs text-gray-500 mt-2 flex items-center gap-1.5">
                     <Loader2 className="h-3 w-3 animate-spin" />Transcribing audio…
                   </p>
                 </div>
@@ -666,22 +666,22 @@ export default function VoiceUploadPage() {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <label className="text-xs text-zinc-500 mb-1.5 block font-medium">Recipient (optional)</label>
+                  <label className="text-xs text-gray-500 mb-1.5 block font-medium">Recipient (optional)</label>
                   <input value={recipientEmail} onChange={e => setRecipientEmail(e.target.value)}
                     type="email" placeholder="recipient@example.com"
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3.5 py-2 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                    className="w-full bg-[#1F2937]/60 border border-white/[0.08] rounded-lg px-3.5 py-2 text-sm text-white placeholder:text-gray-600 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
                     id="voice-recipient-email" />
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-500 mb-1.5 block font-medium">Subject</label>
+                  <label className="text-xs text-gray-500 mb-1.5 block font-medium">Subject</label>
                   <input value={emailSubject} onChange={e => setEmailSubject(e.target.value)}
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                    className="w-full bg-[#1F2937]/60 border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
                     placeholder="Subject" id="voice-email-subject" />
                 </div>
                 <div>
-                  <label className="text-xs text-zinc-500 mb-1.5 block font-medium">Body</label>
+                  <label className="text-xs text-gray-500 mb-1.5 block font-medium">Body</label>
                   <textarea value={emailBody} onChange={e => setEmailBody(e.target.value)} rows={8}
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-y font-mono leading-relaxed"
+                    className="w-full bg-[#1F2937]/60 border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-y font-mono leading-relaxed"
                     id="voice-email-body" />
                 </div>
                 <div className="flex gap-2 pt-1">
@@ -698,7 +698,7 @@ export default function VoiceUploadPage() {
                   </Button>
                 </div>
                 {!recipientEmail && (
-                  <p className="text-xs text-zinc-600 text-center">Add a recipient email to enable Send</p>
+                  <p className="text-xs text-gray-600 text-center">Add a recipient email to enable Send</p>
                 )}
                 {saveSuccess && (
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium">
@@ -729,8 +729,8 @@ export default function VoiceUploadPage() {
                 <AlertCircle className="h-8 w-8 text-red-400" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-zinc-200">Something went wrong</p>
-                <p className="text-xs text-zinc-500 mt-1 max-w-[240px]">{errorMsg}</p>
+                <p className="text-sm font-semibold text-gray-200">Something went wrong</p>
+                <p className="text-xs text-gray-500 mt-1 max-w-[240px]">{errorMsg}</p>
               </div>
               <Button variant="outline" size="sm" onClick={handleReset} id="error-retry-btn">
                 <RotateCcw className="h-3.5 w-3.5 mr-1.5" />Try Again
@@ -741,19 +741,19 @@ export default function VoiceUploadPage() {
           {/* Idle / listening placeholder */}
           {(stage === "idle" || (stage === "recording" && !liveText)) && (
             <div className={`flex flex-col items-center justify-center rounded-2xl border border-dashed p-16 text-center transition-all ${
-              stage === "recording" ? "border-rose-500/30 bg-rose-500/5" : "border-zinc-800"
+              stage === "recording" ? "border-rose-500/30 bg-rose-500/5" : "border-white/[0.08]"
             }`}>
               <div className={`p-5 rounded-2xl border mb-4 ${
-                stage === "recording" ? "bg-rose-500/10 border-rose-500/20" : "bg-zinc-900/50 border-zinc-800"
+                stage === "recording" ? "bg-rose-500/10 border-rose-500/20" : "bg-[#1F2937]/60 border-white/[0.08]"
               }`}>
                 {stage === "recording"
                   ? <Mic className="h-8 w-8 text-rose-400 animate-pulse" />
-                  : <Wand2 className="h-8 w-8 text-zinc-600" />}
+                  : <Wand2 className="h-8 w-8 text-gray-600" />}
               </div>
-              <p className="text-sm font-semibold text-zinc-500">
+              <p className="text-sm font-semibold text-gray-500">
                 {stage === "recording" ? "Listening…" : "Output will appear here"}
               </p>
-              <p className="text-xs text-zinc-600 mt-1 max-w-[200px]">
+              <p className="text-xs text-gray-600 mt-1 max-w-[200px]">
                 {stage === "recording"
                   ? "Speak clearly into your microphone"
                   : "Upload an audio file or start a recording on the left"}

@@ -134,10 +134,10 @@ export default function AgentConfigsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Sliders className="h-6 w-6 text-indigo-400" />
+            <Sliders className="h-6 w-6 text-violet-400" />
             Voice Agent Configurations
           </h1>
-          <p className="text-zinc-400 text-sm">
+          <p className="text-gray-400 text-sm">
             Configure prompt behaviors, system instructions, voices, and settings for AI callers.
           </p>
         </div>
@@ -166,64 +166,64 @@ export default function AgentConfigsPage() {
       {/* Configurations List */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
-          <Loader2 className="h-8 w-8 text-indigo-400 animate-spin" />
-          <p className="text-zinc-400 text-sm">Loading configurations...</p>
+          <Loader2 className="h-8 w-8 text-violet-400 animate-spin" />
+          <p className="text-gray-400 text-sm">Loading configurations...</p>
         </div>
       ) : configs.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 px-4 text-center glass rounded-xl">
-          <div className="p-3 rounded-2xl bg-zinc-800/30 border border-zinc-800/50 mb-4 text-zinc-500">
+          <div className="p-3 rounded-2xl bg-zinc-800/30 border border-white/[0.08]/50 mb-4 text-gray-500">
             <Sliders className="h-6 w-6" />
           </div>
           <h3 className="text-base font-semibold text-white">No configurations found</h3>
-          <p className="text-xs text-zinc-500 mt-1 max-w-xs mx-auto">
+          <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
             Create a voice configuration profile to define what your AI caller says and how it behaves.
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {configs.map((config) => (
-            <Card key={config.id} hoverEffect className="flex flex-col justify-between border border-zinc-800 bg-zinc-900/20">
+            <Card key={config.id} hoverEffect className="flex flex-col justify-between border border-white/[0.08] bg-zinc-900/20">
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
                     <h3 className="text-base font-bold text-white truncate max-w-[180px]">{config.name}</h3>
-                    <p className="text-[10px] text-zinc-500 font-medium">Created: {config.created_at ? new Date(config.created_at).toLocaleDateString() : "—"}</p>
+                    <p className="text-[10px] text-gray-500 font-medium">Created: {config.created_at ? new Date(config.created_at).toLocaleDateString() : "—"}</p>
                   </div>
-                  <div className="flex items-center gap-1.5 py-1 px-2.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-semibold">
+                  <div className="flex items-center gap-1.5 py-1 px-2.5 rounded-full bg-violet-500/10 border border-violet-500/20 text-indigo-300 text-[10px] font-semibold">
                     <Volume2 className="h-3.5 w-3.5" />
                     {VOICE_OPTIONS.find(v => v.id === config.voice_id)?.name.split(' ')[0] || config.voice_id}
                   </div>
                 </div>
                 
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">System Prompt Instructions</span>
-                  <p className="text-xs text-zinc-400 line-clamp-4 bg-zinc-950/50 p-2.5 rounded-lg border border-zinc-900/60 leading-relaxed italic">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">System Prompt Instructions</span>
+                  <p className="text-xs text-gray-400 line-clamp-4 bg-zinc-950/50 p-2.5 rounded-lg border border-zinc-900/60 leading-relaxed italic">
                     "{config.prompt}"
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between text-xs text-zinc-500 pt-2">
+                <div className="flex items-center justify-between text-xs text-gray-500 pt-2">
                   <span className="flex items-center gap-1">
                     Temperature: 
-                    <span className="font-semibold text-zinc-300">{config.temperature}</span>
+                    <span className="font-semibold text-gray-300">{config.temperature}</span>
                   </span>
-                  <span className="text-[10px] bg-zinc-800 text-zinc-400 py-0.5 px-1.5 rounded">Vapi Agent</span>
+                  <span className="text-[10px] bg-[#1F2937]text-gray-400 py-0.5 px-1.5 rounded">Vapi Agent</span>
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-zinc-800/40 flex justify-end gap-2">
+              <div className="mt-6 pt-4 border-t border-white/[0.08]/40 flex justify-end gap-2">
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => handleOpenEdit(config)}
-                  className="h-8 !px-2.5 text-xs text-zinc-400 hover:text-white"
+                  className="h-8 !px-2.5 text-xs text-gray-400 hover:text-white"
                 >
                   <Edit2 className="h-3 w-3 mr-1.5" />
                   Edit
                 </Button>
                 <button 
                   onClick={() => handleDelete(config.id)}
-                  className="p-1.5 rounded-lg text-zinc-600 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200"
+                  className="p-1.5 rounded-lg text-gray-600 hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-200"
                   title="Delete configuration"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -242,7 +242,7 @@ export default function AgentConfigsPage() {
               <CardTitle className="text-lg">
                 {editingId ? "Edit Configuration" : "New Agent Configuration"}
               </CardTitle>
-              <button onClick={() => setShowModal(false)} className="text-zinc-500 hover:text-white">
+              <button onClick={() => setShowModal(false)} className="text-gray-500 hover:text-white">
                 <X className="h-4 w-4" />
               </button>
             </CardHeader>
@@ -257,28 +257,28 @@ export default function AgentConfigsPage() {
                 />
                 
                 <div>
-                  <label className="block text-xs font-semibold text-zinc-400 uppercase mb-1.5 flex items-center gap-1">
+                  <label className="block text-xs font-semibold text-gray-400 uppercase mb-1.5 flex items-center gap-1">
                     System Instructions (Prompt) *
                     <span title="Describe who the AI agent is, their tone, goal, and the details of what they should communicate or ask.">
-                      <HelpCircle className="h-3.5 w-3.5 text-zinc-500 cursor-help" />
+                      <HelpCircle className="h-3.5 w-3.5 text-gray-500 cursor-help" />
                     </span>
                   </label>
                   <textarea
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                     placeholder="E.g. You are school representative calling parents to remind them about parent-teacher meetings on Friday. Be warm, polite, and record if they will attend."
-                    className="w-full min-h-[140px] rounded-lg border border-zinc-800 bg-zinc-950 p-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 leading-relaxed"
+                    className="w-full min-h-[140px] rounded-lg border border-white/[0.08] bg-zinc-950 p-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50 leading-relaxed"
                     disabled={submitting}
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-zinc-400 uppercase mb-1.5">Voice Model</label>
+                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Voice Model</label>
                     <select
                       value={voiceId}
                       onChange={(e) => setVoiceId(e.target.value)}
-                      className="w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50"
+                      className="w-full rounded-lg border border-white/[0.08] bg-zinc-950 p-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50"
                       disabled={submitting}
                     >
                       {VOICE_OPTIONS.map((opt) => (
@@ -290,9 +290,9 @@ export default function AgentConfigsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-zinc-400 uppercase mb-1.5 flex justify-between">
+                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-1.5 flex justify-between">
                       <span>Creativity (Temp)</span>
-                      <span className="text-indigo-400 font-bold">{temperature}</span>
+                      <span className="text-violet-400 font-bold">{temperature}</span>
                     </label>
                     <input
                       type="range"

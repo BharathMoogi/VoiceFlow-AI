@@ -1,5 +1,6 @@
 import json
-from typing import Dict
+import re
+from typing import Dict, Optional
 from fastapi import HTTPException, status
 from app.core.config import settings
 
@@ -76,6 +77,87 @@ class AIService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"AI generation failed: {str(e)}"
+            )
+
+    async def translate_text(
+        self,
+        text: str,
+        source_lang: str = "auto",
+        target_lang: str = "en",
+    ) -> Dict[str, Optional[str]]:
+        """
+        Translate text using Gemini AI.
+
+        Args:
+            text (str): The text to translate.
+            source_lang (str): Source language code, or 'auto' for detection.
+            target_lang (str): Target language code.
+
+        Returns:
+            Dict with 'translated_text' and optional 'detected_language'.
+        """
+        if not self.client:
+            # Mock response when AI is not configured
+            return {
+                "translated_text": f"[Mock translation of: {text[:50]}]",
+                "detected_language": "en",
+            }
+
+        if source_lang == "auto":
+            source_instruction = (
+                "The source language is unknown — detect it automatically and include "
+                "the detected ISO-639-1 language code in the 'detected_language' field."
+            )
+        else:
+            source_instruction = (
+                f"The source language is '{source_lang}'. "
+                "Set 'detected_language' to null."
+            )
+
+        system_instructions = (
+            "You are an expert, fluent translator. Translate the given text accurately and naturally. "
+            f"{source_instruction} "
+            f"Translate into language code '{target_lang}'. "
+            "You MUST respond ONLY with a valid JSON object containing exactly two keys: "
+            "'translated_text' (the translation) and 'detected_language' (ISO-639-1 code or null). "
+            "Do not include markdown formatting or any text outside the JSON object."
+        )
+
+        full_prompt = f"{system_instructions}\n\nText to translate:\n{text}"
+
+        try:
+            from google import genai
+            response = self.client.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=full_prompt,
+            )
+
+            response_text = response.text.strip()
+
+            # Strip markdown code fences if present
+            if response_text.startswith("```"):
+                response_text = re.sub(r"^```[a-z]*\n?", "", response_text)
+                response_text = re.sub(r"```$", "", response_text).strip()
+
+            data = json.loads(response_text)
+
+            if "translated_text" not in data:
+                raise ValueError("Response missing 'translated_text' key")
+
+            return {
+                "translated_text": data["translated_text"],
+                "detected_language": data.get("detected_language"),
+            }
+
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to parse AI translation response as JSON",
+            )
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"AI translation failed: {str(e)}",
             )
 
 ai_service = AIService()

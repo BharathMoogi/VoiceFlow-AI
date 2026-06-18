@@ -13,7 +13,6 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Zap,
   User,
   Users,
   PhoneCall,
@@ -22,60 +21,43 @@ import {
   BarChart3,
   Edit2,
   Check,
-  X
+  X,
+  Sparkles,
+  Languages,
 } from "lucide-react";
 import { logout, getUserInfo, isLoggedIn, fetchMe, saveUserInfo, updateProfile } from "@/lib/api";
 
-const navItems = [
+const navSections = [
   {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
+    label: "Overview",
+    items: [
+      { label: "Dashboard",   href: "/dashboard",              icon: LayoutDashboard },
+      { label: "Analytics",   href: "/dashboard/analytics",    icon: BarChart3 },
+    ],
   },
   {
-    label: "Contacts",
-    href: "/dashboard/contacts",
-    icon: Users,
+    label: "Outreach",
+    items: [
+      { label: "Contacts",        href: "/dashboard/contacts",       icon: Users },
+      { label: "Campaigns",       href: "/dashboard/campaigns",      icon: Megaphone },
+      { label: "Call History",    href: "/dashboard/call-logs",      icon: PhoneCall },
+    ],
   },
   {
-    label: "Agent Configs",
-    href: "/dashboard/agent-configs",
-    icon: Sliders,
+    label: "AI Tools",
+    items: [
+      { label: "Agent Configs",   href: "/dashboard/agent-configs",  icon: Sliders },
+      { label: "Conversations",   href: "/dashboard/conversations",  icon: MessageSquare },
+      { label: "Email Generator", href: "/dashboard/email-generator",icon: Mail },
+      { label: "Voice Upload",    href: "/dashboard/voice-upload",   icon: Mic },
+      { label: "Translator",      href: "/dashboard/translator",     icon: Languages },
+    ],
   },
   {
-    label: "Campaigns",
-    href: "/dashboard/campaigns",
-    icon: Megaphone,
-  },
-  {
-    label: "Call History",
-    href: "/dashboard/call-logs",
-    icon: PhoneCall,
-  },
-  {
-    label: "Analytics",
-    href: "/dashboard/analytics",
-    icon: BarChart3,
-  },
-  {
-    label: "Conversations",
-    href: "/dashboard/conversations",
-    icon: MessageSquare,
-  },
-  {
-    label: "Email Generator",
-    href: "/dashboard/email-generator",
-    icon: Mail,
-  },
-  {
-    label: "Voice Upload",
-    href: "/dashboard/voice-upload",
-    icon: Mic,
-  },
-  {
-    label: "Settings",
-    href: "/dashboard/settings",
-    icon: Settings,
+    label: "System",
+    items: [
+      { label: "Settings",        href: "/dashboard/settings",       icon: Settings },
+    ],
   },
 ];
 
@@ -89,13 +71,9 @@ export const Sidebar: React.FC = () => {
   const [editNameValue, setEditNameValue] = useState("");
   const [isSavingName, setIsSavingName] = useState(false);
 
-  // Load user info from localStorage, then refresh from API
   useEffect(() => {
     const stored = getUserInfo();
-    Promise.resolve().then(() => {
-      setUserInfo(stored);
-    });
-
+    Promise.resolve().then(() => setUserInfo(stored));
     if (isLoggedIn()) {
       fetchMe()
         .then((profile) => {
@@ -103,19 +81,13 @@ export const Sidebar: React.FC = () => {
           saveUserInfo(name, profile.email);
           setUserInfo({ name, email: profile.email });
         })
-        .catch(() => {
-          // Token may be invalid — apiFetch will handle redirect
-        });
+        .catch(() => {});
     }
   }, []);
 
   const handleLogout = async () => {
     setLoggingOut(true);
-    try {
-      await logout();
-    } catch {
-      // ignore errors during logout
-    }
+    try { await logout(); } catch {}
     router.push("/login");
   };
 
@@ -131,7 +103,6 @@ export const Sidebar: React.FC = () => {
       setIsEditingName(false);
     } catch (error) {
       console.error("Failed to update profile name:", error);
-      // fallback to old name
       setEditNameValue(userInfo.name);
     } finally {
       setIsSavingName(false);
@@ -139,146 +110,229 @@ export const Sidebar: React.FC = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSaveName();
-    } else if (e.key === 'Escape') {
+    if (e.key === "Enter") handleSaveName();
+    else if (e.key === "Escape") {
       setIsEditingName(false);
       setEditNameValue(userInfo.name);
     }
   };
 
+  const userInitials = userInfo.name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <aside
-      className={`relative flex flex-col bg-[#020617] border-r border-white/5 transition-all duration-300 ease-in-out ${
-        collapsed ? "w-16" : "w-64"
+      className={`relative flex flex-col border-r border-white/[0.05] transition-all duration-300 ease-in-out ${
+        collapsed ? "w-[68px]" : "w-[240px]"
       } min-h-screen shrink-0`}
+      style={{ background: "#0d1117" }}
     >
+      {/* Subtle top gradient line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
+
       {/* Toggle button */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-6 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-white/10 bg-[#0F172A] text-slate-400 hover:text-white hover:border-[#2563EB]/50 transition-all duration-200 shadow-md"
+        className="absolute -right-3 top-7 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-[#1F2937] border border-white/10 text-gray-400 hover:text-white hover:border-violet-500/40 hover:shadow-[0_0_12px_rgba(139,92,246,0.3)] transition-all duration-200 shadow-lg"
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         id="sidebar-toggle"
       >
-        {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+        {collapsed ? (
+          <ChevronRight className="h-3 w-3" />
+        ) : (
+          <ChevronLeft className="h-3 w-3" />
+        )}
       </button>
 
       {/* Logo */}
-      <div className={`flex items-center gap-3 p-5 border-b border-white/5 ${collapsed ? "justify-center" : ""}`}>
-        <div className="flex-shrink-0 relative h-9 w-9">
-          <Image 
-            src="/logo.png" 
-            alt="VoiceFlow-AI Logo" 
-            fill 
-            className="object-contain"
-          />
+      <div
+        className={`flex items-center gap-3 px-4 py-5 border-b border-white/[0.05] ${
+          collapsed ? "justify-center" : ""
+        }`}
+      >
+        <div className="relative flex-shrink-0 h-8 w-8">
+          <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-violet-600 to-blue-500 blur-sm opacity-60" />
+          <div className="relative h-8 w-8 rounded-xl bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center shadow-lg overflow-hidden">
+            <Image
+              src="/logo.png"
+              alt="VoiceFlow AI"
+              fill
+              className="object-contain p-1"
+              onError={() => {}}
+            />
+          </div>
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
-            <p className="text-sm font-bold text-white leading-tight tracking-tight">VoiceFlow-AI</p>
-            <p className="text-[10px] text-[#06B6D4] font-medium tracking-wide">AI Email Studio</p>
+            <p className="text-[13px] font-bold text-white leading-tight tracking-tight">
+              VoiceFlow
+              <span className="gradient-text-purple"> AI</span>
+            </p>
+            <div className="flex items-center gap-1 mt-0.5">
+              <Sparkles className="h-2.5 w-2.5 text-violet-400" />
+              <p className="text-[10px] text-violet-400/80 font-medium tracking-wide">
+                AI Sales Platform
+              </p>
+            </div>
           </div>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive =
-            item.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : pathname.startsWith(item.href);
+      <nav className="flex-1 px-2.5 py-3 space-y-5 overflow-y-auto">
+        {navSections.map((section) => (
+          <div key={section.label}>
+            {!collapsed && (
+              <p className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-600 select-none">
+                {section.label}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const Icon = item.icon;
+                const isActive =
+                  item.href === "/dashboard"
+                    ? pathname === "/dashboard"
+                    : pathname.startsWith(item.href);
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group relative ${
-                isActive
-                  ? "bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] text-white shadow-lg shadow-[#2563EB]/15 border border-white/10"
-                  : "text-slate-400 hover:text-white hover:bg-[#1E293B]/60"
-              } ${collapsed ? "justify-center" : ""}`}
-              id={`nav-${item.label.toLowerCase().replace(/\s/g, "-")}`}
-            >
-              {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#06B6D4] rounded-r-full" />
-              )}
-              <Icon className={`h-4.5 w-4.5 flex-shrink-0 ${isActive ? "text-white animate-pulse" : "text-slate-500 group-hover:text-slate-300"}`} />
-              {!collapsed && <span>{item.label}</span>}
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
+                      isActive
+                        ? "bg-violet-600/15 text-white nav-active-glow border border-violet-500/20"
+                        : "text-gray-500 hover:text-gray-200 hover:bg-white/[0.04] border border-transparent"
+                    } ${collapsed ? "justify-center" : ""}`}
+                    id={`nav-${item.label.toLowerCase().replace(/\s/g, "-")}`}
+                  >
+                    {/* Active left bar */}
+                    {isActive && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-gradient-to-b from-violet-400 to-violet-600 rounded-r-full" />
+                    )}
 
-              {/* Tooltip for collapsed state */}
-              {collapsed && (
-                <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-[#0F172A] border border-white/10 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-xl">
-                  {item.label}
-                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-[#0F172A]" />
-                </div>
-              )}
-            </Link>
-          );
-        })}
+                    <Icon
+                      className={`h-4 w-4 flex-shrink-0 transition-all duration-200 ${
+                        isActive
+                          ? "text-violet-400"
+                          : "text-gray-600 group-hover:text-gray-300"
+                      }`}
+                    />
+
+                    {!collapsed && (
+                      <span className="truncate">{item.label}</span>
+                    )}
+
+                    {/* Active dot */}
+                    {isActive && !collapsed && (
+                      <span className="ml-auto h-1.5 w-1.5 rounded-full bg-violet-400 flex-shrink-0" />
+                    )}
+
+                    {/* Tooltip (collapsed) */}
+                    {collapsed && (
+                      <div className="tooltip pointer-events-none absolute left-full ml-3 px-2.5 py-1.5 bg-[#1F2937] border border-white/10 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap z-50 shadow-2xl">
+                        {item.label}
+                        <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-[#1F2937]" />
+                      </div>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* User Profile + Logout */}
-      <div className="p-3 border-t border-white/5 space-y-1">
+      <div className="px-2.5 py-3 border-t border-white/[0.05] space-y-1">
+        {/* Profile */}
         <div
-          className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl ${
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl group/profile ${
             collapsed ? "justify-center" : ""
           }`}
         >
-          <div className="flex-shrink-0 h-8 w-8 rounded-full bg-gradient-to-tr from-[#2563EB] to-[#06B6D4] flex items-center justify-center shadow-md">
-            <User className="h-4 w-4 text-white" />
+          {/* Avatar */}
+          <div className="relative flex-shrink-0">
+            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-600 via-purple-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-violet-500/20 flex-shrink-0">
+              {userInitials || <User className="h-4 w-4" />}
+            </div>
+            <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border-2 border-[#0d1117]" />
           </div>
+
           {!collapsed && (
-            <div className="overflow-hidden flex-1 group/profile flex items-center justify-between pr-1">
+            <div className="overflow-hidden flex-1 flex items-center justify-between">
               <div className="overflow-hidden flex-1">
                 {isEditingName ? (
                   <div className="flex items-center gap-1">
                     <input
                       autoFocus
                       type="text"
-                      className="text-xs font-semibold text-white bg-[#1E293B] border border-white/10 rounded px-1.5 py-0.5 w-full focus:outline-none focus:border-[#2563EB]"
+                      className="text-xs font-semibold text-white bg-[#1F2937] border border-violet-500/40 rounded-lg px-2 py-0.5 w-full focus:outline-none premium-input transition-all"
                       value={editNameValue}
                       onChange={(e) => setEditNameValue(e.target.value)}
                       onKeyDown={handleKeyDown}
                       disabled={isSavingName}
                     />
-                    <button onClick={handleSaveName} disabled={isSavingName} className="text-[#06B6D4] hover:text-[#06B6D4]/80">
+                    <button
+                      onClick={handleSaveName}
+                      disabled={isSavingName}
+                      className="text-emerald-400 hover:text-emerald-300 transition-colors"
+                    >
                       <Check className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => { setIsEditingName(false); setEditNameValue(userInfo.name); }} disabled={isSavingName} className="text-rose-500 hover:text-rose-400">
+                    <button
+                      onClick={() => {
+                        setIsEditingName(false);
+                        setEditNameValue(userInfo.name);
+                      }}
+                      disabled={isSavingName}
+                      className="text-red-400 hover:text-red-300 transition-colors"
+                    >
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </div>
                 ) : (
                   <>
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-semibold text-white truncate">{userInfo.name}</p>
-                      <button 
-                        onClick={() => { setEditNameValue(userInfo.name); setIsEditingName(true); }}
-                        className="opacity-0 group-hover/profile:opacity-100 transition-opacity text-slate-500 hover:text-slate-300 ml-2"
+                      <p className="text-[13px] font-semibold text-white truncate">
+                        {userInfo.name}
+                      </p>
+                      <button
+                        onClick={() => {
+                          setEditNameValue(userInfo.name);
+                          setIsEditingName(true);
+                        }}
+                        className="opacity-0 group-hover/profile:opacity-100 transition-opacity text-gray-600 hover:text-gray-300 ml-2"
                         aria-label="Edit profile name"
                       >
                         <Edit2 className="h-3 w-3" />
                       </button>
                     </div>
-                    <p className="text-[10px] text-slate-400 truncate">{userInfo.email}</p>
+                    <p className="text-[11px] text-gray-600 truncate">{userInfo.email}</p>
                   </>
                 )}
               </div>
             </div>
           )}
         </div>
+
+        {/* Logout */}
         <button
           onClick={handleLogout}
           disabled={loggingOut}
           id="logout-btn"
-          className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:text-rose-500 hover:bg-rose-500/10 transition-all duration-200 group disabled:opacity-50 ${
+          className={`w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium text-gray-600 hover:text-red-400 hover:bg-red-500/[0.08] border border-transparent hover:border-red-500/10 transition-all duration-200 disabled:opacity-50 ${
             collapsed ? "justify-center" : ""
           }`}
         >
-          <LogOut className="h-4.5 w-4.5 flex-shrink-0 group-hover:text-rose-500" />
-          {!collapsed && <span>{loggingOut ? "Logging out…" : "Logout"}</span>}
+          <LogOut className="h-4 w-4 flex-shrink-0 transition-colors group-hover:text-red-400" />
+          {!collapsed && (
+            <span>{loggingOut ? "Logging out…" : "Sign out"}</span>
+          )}
         </button>
       </div>
     </aside>

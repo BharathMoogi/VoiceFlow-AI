@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,10 +20,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VoiceFlow-AI | AI-Powered Voice to Email",
+  title: "VoiceFlow AI — Intelligent Sales Automation Platform",
   description:
-    "VoiceFlow-AI transforms your voice recordings into polished, AI-generated emails. Record, transcribe, and send — all in one place.",
-  keywords: ["voice to email", "AI email", "speech to text", "Gemini AI", "transcription"],
+    "VoiceFlow AI is a next-generation AI sales platform. Automate outreach, manage contacts, launch voice-powered campaigns, and close deals faster with AI agents.",
+  keywords: ["AI sales platform", "voice AI", "email automation", "outreach automation", "AI campaigns"],
+  themeColor: "#030712",
 };
 
 export default function RootLayout({
@@ -27,9 +35,11 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#09090b]">{children}</body>
+      <body className="min-h-full flex flex-col" style={{ background: "#030712" }}>
+        {children}
+      </body>
     </html>
   );
 }

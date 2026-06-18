@@ -155,25 +155,25 @@ export default function ConversationsPage() {
   return (
     <div className="max-w-7xl mx-auto h-[calc(100vh-120px)] flex gap-6">
       {/* Left panel — Conversation list */}
-      <div className="w-72 shrink-0 flex flex-col glass rounded-2xl border border-zinc-800/60 overflow-hidden">
-        <div className="p-4 space-y-3 border-b border-zinc-800/60">
+      <div className="w-72 shrink-0 flex flex-col glass rounded-2xl border border-white/[0.08]/60 overflow-hidden">
+        <div className="p-4 space-y-3 border-b border-white/[0.08]/60">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-zinc-100">Conversations</h2>
             <button
               onClick={handleNewConversation}
               id="new-conversation-btn"
-              className="p-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 hover:text-indigo-300 transition-all duration-200 border border-indigo-500/20"
+              className="p-1.5 rounded-lg bg-violet-600/20 hover:bg-violet-600/40 text-violet-400 hover:text-violet-300 transition-all duration-200 border border-violet-500/20"
             >
               <Plus className="h-4 w-4" />
             </button>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500" />
             <input
               placeholder="Search conversations…"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-indigo-500/50 transition-all"
+              className="w-full bg-[#1F2937]/60 border border-white/[0.08] rounded-lg pl-8 pr-3 py-2 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500/50 transition-all"
               id="conversation-search"
             />
           </div>
@@ -186,45 +186,45 @@ export default function ConversationsPage() {
               onClick={() => setActiveConvId(conv.id)}
               id={`conv-item-${conv.id}`}
               className={`w-full text-left p-4 hover:bg-zinc-800/30 transition-all duration-150 ${
-                conv.id === activeConvId ? "bg-indigo-600/10 border-l-2 border-l-indigo-500" : ""
+                conv.id === activeConvId ? "bg-violet-600/10 border-l-2 border-l-indigo-500" : ""
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500/30 to-violet-500/30 border border-indigo-500/20 flex items-center justify-center">
-                    <MessageSquare className="h-3 w-3 text-indigo-400" />
+                  <div className="flex-shrink-0 h-7 w-7 rounded-full bg-gradient-to-br from-violet-500/30 to-violet-500/30 border border-violet-500/20 flex items-center justify-center">
+                    <MessageSquare className="h-3 w-3 text-violet-400" />
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <p className="text-xs font-semibold text-zinc-200 truncate">{conv.title}</p>
+                      <p className="text-xs font-semibold text-gray-200 truncate">{conv.title}</p>
                       {conv.unread && (
                         <span className="flex-shrink-0 h-1.5 w-1.5 rounded-full bg-indigo-400" />
                       )}
                     </div>
-                    <p className="text-[11px] text-zinc-500 truncate mt-0.5">{conv.lastMessage}</p>
+                    <p className="text-[11px] text-gray-500 truncate mt-0.5">{conv.lastMessage}</p>
                   </div>
                 </div>
-                <span className="text-[10px] text-zinc-600 flex-shrink-0">{conv.time}</span>
+                <span className="text-[10px] text-gray-600 flex-shrink-0">{conv.time}</span>
               </div>
             </button>
           ))}
           {filteredConversations.length === 0 && (
             <div className="p-8 text-center">
-              <MessageSquare className="h-6 w-6 text-zinc-700 mx-auto mb-2" />
-              <p className="text-xs text-zinc-600">No conversations found</p>
+              <MessageSquare className="h-6 w-6 text-gray-700 mx-auto mb-2" />
+              <p className="text-xs text-gray-600">No conversations found</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Right panel — Active conversation */}
-      <div className="flex-1 flex flex-col glass rounded-2xl border border-zinc-800/60 overflow-hidden">
+      <div className="flex-1 flex flex-col glass rounded-2xl border border-white/[0.08]/60 overflow-hidden">
         {activeConversation ? (
           <>
             {/* Chat header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-800/60">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.08]/60">
               <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-md">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-500 to-violet-500 flex items-center justify-center shadow-md">
                   <Bot className="h-4 w-4 text-white" />
                 </div>
                 <div>
@@ -249,11 +249,11 @@ export default function ConversationsPage() {
             <div className="flex-1 overflow-y-auto p-5 space-y-5">
               {activeConversation.messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full space-y-3">
-                  <div className="p-5 rounded-2xl bg-indigo-600/10 border border-indigo-500/20">
-                    <Bot className="h-8 w-8 text-indigo-400" />
+                  <div className="p-5 rounded-2xl bg-violet-600/10 border border-violet-500/20">
+                    <Bot className="h-8 w-8 text-violet-400" />
                   </div>
-                  <p className="text-sm font-semibold text-zinc-300">VoiceFlow AI Ready</p>
-                  <p className="text-xs text-zinc-500 text-center max-w-xs">
+                  <p className="text-sm font-semibold text-gray-300">VoiceFlow AI Ready</p>
+                  <p className="text-xs text-gray-500 text-center max-w-xs">
                     Ask me to write, edit, or improve any email. You can also upload a voice memo!
                   </p>
                 </div>
@@ -267,7 +267,7 @@ export default function ConversationsPage() {
                   <div className={`flex-shrink-0 h-7 w-7 rounded-full flex items-center justify-center ${
                     msg.role === "user"
                       ? "bg-gradient-to-br from-pink-500 to-rose-500"
-                      : "bg-gradient-to-br from-indigo-500 to-violet-500"
+                      : "bg-gradient-to-br from-violet-500 to-violet-500"
                   }`}>
                     {msg.role === "user" ? (
                       <User className="h-3.5 w-3.5 text-white" />
@@ -280,13 +280,13 @@ export default function ConversationsPage() {
                     <div
                       className={`px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                         msg.role === "user"
-                          ? "bg-indigo-600 text-white rounded-tr-sm"
-                          : "bg-zinc-800/70 text-zinc-200 border border-zinc-700/50 rounded-tl-sm"
+                          ? "bg-violet-600 text-white rounded-tr-sm"
+                          : "bg-zinc-800/70 text-gray-200 border border-white/[0.08]/50 rounded-tl-sm"
                       }`}
                     >
                       {formatContent(msg.content)}
                     </div>
-                    <span className="text-[10px] text-zinc-600 mt-1 px-1">{msg.time}</span>
+                    <span className="text-[10px] text-gray-600 mt-1 px-1">{msg.time}</span>
                   </div>
                 </div>
               ))}
@@ -294,10 +294,10 @@ export default function ConversationsPage() {
               {/* Typing indicator */}
               {isTyping && (
                 <div className="flex gap-3">
-                  <div className="h-7 w-7 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center flex-shrink-0">
+                  <div className="h-7 w-7 rounded-full bg-gradient-to-br from-violet-500 to-violet-500 flex items-center justify-center flex-shrink-0">
                     <Bot className="h-3.5 w-3.5 text-white" />
                   </div>
-                  <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-zinc-800/70 border border-zinc-700/50 flex items-center gap-1.5">
+                  <div className="px-4 py-3 rounded-2xl rounded-tl-sm bg-zinc-800/70 border border-white/[0.08]/50 flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-bounce [animation-delay:0ms]" />
                     <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-bounce [animation-delay:150ms]" />
                     <span className="h-1.5 w-1.5 rounded-full bg-zinc-400 animate-bounce [animation-delay:300ms]" />
@@ -308,7 +308,7 @@ export default function ConversationsPage() {
             </div>
 
             {/* Input area */}
-            <div className="px-5 py-4 border-t border-zinc-800/60">
+            <div className="px-5 py-4 border-t border-white/[0.08]/60">
               <div className="flex items-end gap-3">
                 <div className="flex-1 relative">
                   <textarea
@@ -323,11 +323,11 @@ export default function ConversationsPage() {
                       }
                     }}
                     rows={1}
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-xl px-4 py-3 pr-10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-none min-h-[44px] max-h-32"
+                    className="w-full bg-[#1F2937]/60 border border-white/[0.08] rounded-xl px-4 py-3 pr-10 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-none min-h-[44px] max-h-32"
                     style={{ height: "auto" }}
                   />
                   <button
-                    className="absolute right-3 bottom-3 text-zinc-500 hover:text-zinc-300 transition-colors"
+                    className="absolute right-3 bottom-3 text-gray-500 hover:text-gray-300 transition-colors"
                     id="attach-file-btn"
                   >
                     <Paperclip className="h-4 w-4" />
@@ -342,15 +342,15 @@ export default function ConversationsPage() {
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-              <p className="text-[10px] text-zinc-600 mt-2 text-center">
+              <p className="text-[10px] text-gray-600 mt-2 text-center">
                 Press Enter to send · Shift+Enter for new line
               </p>
             </div>
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center space-y-3">
-            <MessageSquare className="h-10 w-10 text-zinc-700" />
-            <p className="text-sm text-zinc-500">Select a conversation to start chatting</p>
+            <MessageSquare className="h-10 w-10 text-gray-700" />
+            <p className="text-sm text-gray-500">Select a conversation to start chatting</p>
           </div>
         )}
       </div>

@@ -125,10 +125,10 @@ export default function EmailGeneratorPage() {
       {/* Page header */}
       <div>
         <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <Zap className="h-5 w-5 text-indigo-400" />
+          <Zap className="h-5 w-5 text-violet-400" />
           AI Email Generator
         </h1>
-        <p className="text-sm text-zinc-500 mt-0.5">
+        <p className="text-sm text-gray-500 mt-0.5">
           Describe your email, and let Gemini AI craft a professional draft instantly.
         </p>
       </div>
@@ -139,7 +139,7 @@ export default function EmailGeneratorPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-indigo-400" />
+                <Sparkles className="h-4 w-4 text-violet-400" />
                 Compose Request
               </CardTitle>
               <CardDescription>Tell the AI what kind of email you need</CardDescription>
@@ -150,7 +150,7 @@ export default function EmailGeneratorPage() {
                 <button
                   id="template-picker-btn"
                   onClick={() => setShowTemplates(!showTemplates)}
-                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-zinc-800 bg-zinc-900/40 text-sm text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 transition-all"
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg border border-white/[0.08] bg-zinc-900/40 text-sm text-gray-400 hover:text-gray-200 hover:border-white/[0.08] transition-all"
                 >
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
@@ -168,7 +168,7 @@ export default function EmailGeneratorPage() {
                           setPrompt(t.prompt);
                           setShowTemplates(false);
                         }}
-                        className="text-left px-3 py-2 rounded-lg border border-zinc-800 bg-zinc-900/40 hover:border-indigo-500/40 hover:bg-indigo-500/5 text-xs text-zinc-400 hover:text-zinc-200 transition-all"
+                        className="text-left px-3 py-2 rounded-lg border border-white/[0.08] bg-zinc-900/40 hover:border-violet-500/40 hover:bg-violet-500/5 text-xs text-gray-400 hover:text-gray-200 transition-all"
                       >
                         {t.label}
                       </button>
@@ -196,14 +196,14 @@ export default function EmailGeneratorPage() {
                   onChange={(e) => setRecipient(e.target.value)}
                 />
                 <div className="flex flex-col space-y-1">
-                  <label htmlFor="email-tone" className="text-xs font-semibold text-zinc-400">
+                  <label htmlFor="email-tone" className="text-xs font-semibold text-gray-400">
                     Tone
                   </label>
                   <select
                     id="email-tone"
                     value={tone}
                     onChange={(e) => setTone(e.target.value)}
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                    className="w-full bg-[#1F2937]/60 border border-white/[0.08] rounded-lg px-3.5 py-2 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
                   >
                     <option value="professional">Professional</option>
                     <option value="friendly">Friendly</option>
@@ -228,12 +228,12 @@ export default function EmailGeneratorPage() {
           </Card>
 
           {/* Tips */}
-          <Card className="!p-4 border-indigo-500/10">
+          <Card className="!p-4 border-violet-500/10">
             <div className="flex gap-3">
-              <Sparkles className="h-4 w-4 text-indigo-400 flex-shrink-0 mt-0.5" />
+              <Sparkles className="h-4 w-4 text-violet-400 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs font-semibold text-zinc-300 mb-1">Tips for better results</p>
-                <ul className="text-xs text-zinc-500 space-y-1 list-disc list-inside">
+                <p className="text-xs font-semibold text-gray-300 mb-1">Tips for better results</p>
+                <ul className="text-xs text-gray-500 space-y-1 list-disc list-inside">
                   <li>Include context: who you're writing to and why</li>
                   <li>Mention any specific points or action items</li>
                   <li>Choose the right tone to match your relationship</li>
@@ -287,7 +287,7 @@ export default function EmailGeneratorPage() {
                     size="sm"
                     onClick={handleRegenerate}
                     id="regenerate-btn"
-                    className="text-zinc-400"
+                    className="text-gray-400"
                   >
                     <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                     Regenerate
@@ -298,11 +298,11 @@ export default function EmailGeneratorPage() {
                 {/* Subject line */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-zinc-400">Subject</label>
+                    <label className="text-xs font-semibold text-gray-400">Subject</label>
                     <button
                       id="copy-subject-btn"
                       onClick={() => handleCopy("subject")}
-                      className="flex items-center gap-1 text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                      className="flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-300 transition-colors"
                     >
                       {copiedField === "subject" ? (
                         <><Check className="h-3 w-3 text-emerald-400" /><span className="text-emerald-400">Copied!</span></>
@@ -316,7 +316,7 @@ export default function EmailGeneratorPage() {
                     onChange={(e) =>
                       setGeneratedEmail({ ...generatedEmail, subject: e.target.value })
                     }
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                    className="w-full bg-[#1F2937]/60 border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all"
                     id="generated-subject"
                   />
                 </div>
@@ -324,11 +324,11 @@ export default function EmailGeneratorPage() {
                 {/* Body */}
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-semibold text-zinc-400">Body</label>
+                    <label className="text-xs font-semibold text-gray-400">Body</label>
                     <button
                       id="copy-body-btn"
                       onClick={() => handleCopy("body")}
-                      className="flex items-center gap-1 text-[11px] text-zinc-500 hover:text-zinc-300 transition-colors"
+                      className="flex items-center gap-1 text-[11px] text-gray-500 hover:text-gray-300 transition-colors"
                     >
                       {copiedField === "body" ? (
                         <><Check className="h-3 w-3 text-emerald-400" /><span className="text-emerald-400">Copied!</span></>
@@ -343,7 +343,7 @@ export default function EmailGeneratorPage() {
                       setGeneratedEmail({ ...generatedEmail, body: e.target.value })
                     }
                     rows={12}
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-y font-mono leading-relaxed"
+                    className="w-full bg-[#1F2937]/60 border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-y font-mono leading-relaxed"
                     id="generated-body"
                   />
                 </div>
@@ -382,7 +382,7 @@ export default function EmailGeneratorPage() {
                 </div>
 
                 {!recipient && (
-                  <p className="text-xs text-zinc-600 text-center">Add a recipient email to enable Send</p>
+                  <p className="text-xs text-gray-600 text-center">Add a recipient email to enable Send</p>
                 )}
 
                 {sendSuccess && (
@@ -410,12 +410,12 @@ export default function EmailGeneratorPage() {
           )}
 
           {!generatedEmail && !isGenerating && (
-            <div className="h-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-zinc-800 p-16 text-center">
-              <div className="p-5 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 mb-4">
-                <Mail className="h-8 w-8 text-indigo-400" />
+            <div className="h-full flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/[0.08] p-16 text-center">
+              <div className="p-5 rounded-2xl bg-violet-600/10 border border-violet-500/20 mb-4">
+                <Mail className="h-8 w-8 text-violet-400" />
               </div>
-              <p className="text-sm font-semibold text-zinc-400">Your email will appear here</p>
-              <p className="text-xs text-zinc-600 mt-1 max-w-[200px]">
+              <p className="text-sm font-semibold text-gray-400">Your email will appear here</p>
+              <p className="text-xs text-gray-600 mt-1 max-w-[200px]">
                 Fill in the prompt on the left and click Generate
               </p>
             </div>
