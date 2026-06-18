@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/UI/Button";
 import { Input } from "@/components/UI/Input";
 import { KeyRound, Mail, User, Mic } from "lucide-react";
+import Image from "next/image";
 import { login, register, saveTokens, fetchMe, saveUserInfo, verifyEmailOTP } from "@/lib/api";
 
 export default function LoginPage() {
@@ -220,14 +221,32 @@ export default function LoginPage() {
         </form>
       </Card>
 
-      {/* Founder credit */}
-      <div className="mt-6 flex flex-col items-center gap-1 relative z-10">
-        <p className="text-[11px] text-slate-600 tracking-wide">
-          Built by{" "}
-          <span className="text-slate-400 font-semibold">Bharath Moogi</span>
-          <span className="text-slate-600 mx-1.5">·</span>
-          <span className="text-violet-400 font-medium">Founder</span>
-        </p>
+      {/* Founder credit — premium card */}
+      <div className="mt-8 relative z-10 flex flex-col items-center gap-4">
+        <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-white/[0.03] border border-white/[0.07] backdrop-blur-md shadow-xl shadow-black/20">
+          {/* Logo */}
+          <div className="relative h-12 w-12 rounded-xl overflow-hidden bg-[#2563EB]/10 border border-[#2563EB]/20 flex items-center justify-center flex-shrink-0">
+            <Image
+              src="/logo.png"
+              alt="VoiceFlow AI Logo"
+              width={48}
+              height={48}
+              className="object-contain p-1"
+            />
+          </div>
+          {/* Name + title */}
+          <div className="flex flex-col">
+            <p className="text-base font-extrabold text-white tracking-tight leading-tight">
+              Bharath Moogi
+            </p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-500/20 text-violet-300 border border-violet-500/30 tracking-wide uppercase">
+                Founder
+              </span>
+              <span className="text-[11px] text-slate-500">VoiceFlow-AI</span>
+            </div>
+          </div>
+        </div>
         <p className="text-[10px] text-slate-700">© 2026 VoiceFlow-AI. All rights reserved.</p>
       </div>
     </div>
