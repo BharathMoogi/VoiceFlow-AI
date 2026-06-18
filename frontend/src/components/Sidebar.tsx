@@ -96,14 +96,17 @@ export const Sidebar: React.FC = () => {
       setIsEditingName(false);
       return;
     }
+    // Optimistically update locally first — close editor immediately
+    const newName = editNameValue.trim();
+    setUserInfo({ ...userInfo, name: newName });
+    saveUserInfo(newName, userInfo.email);
+    setIsEditingName(false);
     setIsSavingName(true);
     try {
-      await updateProfile(editNameValue);
-      setUserInfo({ ...userInfo, name: editNameValue });
-      setIsEditingName(false);
+      await updateProfile(newName);
     } catch (error) {
-      console.error("Failed to update profile name:", error);
-      setEditNameValue(userInfo.name);
+      console.error("Failed to sync profile name to server:", error);
+      // Keep local update even if server sync fails
     } finally {
       setIsSavingName(false);
     }

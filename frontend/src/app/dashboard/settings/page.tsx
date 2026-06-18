@@ -26,6 +26,8 @@ export default function SettingsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   
   // Preferences states
   const [darkMode, setDarkMode] = useState(true);
@@ -66,12 +68,20 @@ export default function SettingsPage() {
   const handleSaveProfile = async () => {
     if (!editName.trim()) return;
     setSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+    // Optimistically update UI and localStorage immediately
+    setUserInfo(prev => ({ ...prev, name: editName }));
+    saveUserInfo(editName, userInfo.email);
+    setIsEditing(false);
     try {
       await updateProfile(editName);
-      setUserInfo(prev => ({ ...prev, name: editName }));
-      setIsEditing(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
     } catch (error) {
-      console.error("Failed to update profile:", error);
+      // Show error but keep the local name update
+      setSaveError(error instanceof Error ? error.message : "Failed to save to server. Name updated locally.");
+      setTimeout(() => setSaveError(null), 5000);
     } finally {
       setSaving(false);
     }
@@ -88,6 +98,23 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen bg-transparent text-white p-4 sm:p-6 md:p-8 rounded-3xl">
       <div className="max-w-4xl mx-auto space-y-8">
+
+        {/* Success toast */}
+        {saveSuccess && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm">
+            <Check className="h-4 w-4 flex-shrink-0" />
+            <span>Name saved successfully!</span>
+          </div>
+        )}
+
+        {/* Error toast */}
+        {saveError && (
+          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            <X className="h-4 w-4 flex-shrink-0" />
+            <span className="flex-1">{saveError}</span>
+            <button onClick={() => setSaveError(null)} className="hover:text-red-300 transition-colors"><X className="h-4 w-4" /></button>
+          </div>
+        )}
         
         {/* Profile Header Card */}
         <div className="bg-[#1F2937]/70 border border-white/5 rounded-3xl p-6 shadow-xl shadow-[#020617]/40 flex flex-col sm:flex-row items-center justify-between gap-6 transition-all backdrop-blur-md">

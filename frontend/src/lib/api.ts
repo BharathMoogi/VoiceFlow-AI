@@ -141,7 +141,9 @@ export async function fetchMe(redirectOnFailure = false): Promise<UserProfile> {
 export async function updateProfile(full_name: string) {
   const { data, error } = await insforge.auth.updateUser({ data: { full_name } });
   if (error) throw new Error(error.message);
-  saveUserInfo(full_name, data.user.email || '');
+  // data.user can be null on some InsForge SDK versions — fall back gracefully
+  const email = data?.user?.email || getUserInfo().email || '';
+  saveUserInfo(full_name, email);
   return data;
 }
 
