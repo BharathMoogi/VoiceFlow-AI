@@ -193,6 +193,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileCl
                 AI Sales Platform
               </p>
             </div>
+            <p className="text-[9px] text-slate-600 mt-0.5 tracking-wide">
+              by <span className="text-slate-500 font-semibold">Bharath Moogi</span>
+              <span className="text-violet-500/60 ml-1">· Founder</span>
+            </p>
           </div>
         )}
       </div>

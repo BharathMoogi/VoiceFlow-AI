@@ -219,6 +219,17 @@ export default function LoginPage() {
           </CardFooter>
         </form>
       </Card>
+
+      {/* Founder credit */}
+      <div className="mt-6 flex flex-col items-center gap-1 relative z-10">
+        <p className="text-[11px] text-slate-600 tracking-wide">
+          Built by{" "}
+          <span className="text-slate-400 font-semibold">Bharath Moogi</span>
+          <span className="text-slate-600 mx-1.5">·</span>
+          <span className="text-violet-400 font-medium">Founder</span>
+        </p>
+        <p className="text-[10px] text-slate-700">© 2026 VoiceFlow-AI. All rights reserved.</p>
+      </div>
     </div>
   );
 }
