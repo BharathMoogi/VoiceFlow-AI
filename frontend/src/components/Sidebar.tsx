@@ -173,16 +173,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileCl
         }`}
       >
         <div className="relative flex-shrink-0 h-8 w-8">
-          <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-violet-600 to-blue-500 blur-sm opacity-60" />
-          <div className="relative h-8 w-8 rounded-xl bg-gradient-to-br from-violet-600 to-blue-500 flex items-center justify-center shadow-lg overflow-hidden">
-            <Image
-              src="/logo.png"
-              alt="VoiceFlow AI"
-              fill
-              className="object-contain p-1"
-              onError={() => {}}
-            />
-          </div>
+          <Image
+            src="/logo.png"
+            alt="VoiceFlow AI"
+            fill
+            className="object-contain"
+            onError={() => {}}
+          />
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
