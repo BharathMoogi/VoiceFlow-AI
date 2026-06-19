@@ -76,13 +76,13 @@ const quickActions = [
     badge:    null,
   },
   {
-    label: "Launch Campaign",
-    desc:  "Start a new outreach campaign",
+    label: "Outbound AI Calls",
+    desc:  "AI agents call your contacts automatically. You define the persona, script, and voice — the AI does the talking.",
     href:  "/dashboard/campaigns",
     icon:  Bot,
     gradient: "from-orange-600 to-rose-600",
     glow:     "rgba(249,115,22,0.35)",
-    badge:    "New",
+    badge:    "Voice",
   },
 ];
 

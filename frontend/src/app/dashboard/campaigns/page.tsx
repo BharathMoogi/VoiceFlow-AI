@@ -249,10 +249,10 @@ export default function CampaignsPage() {
         <div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2">
             <Megaphone className="h-6 w-6 text-violet-400" />
-            Outbound Call Campaigns
+            Outbound AI Calls
           </h1>
           <p className="text-gray-400 text-sm">
-            Launch batch voice calls to contacts using customized AI agent personas.
+            AI agents call your contacts automatically. You define the persona, script, and voice — the AI does the talking.
           </p>
         </div>
         

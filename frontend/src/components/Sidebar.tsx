@@ -39,7 +39,7 @@ const navSections = [
     label: "Outreach",
     items: [
       { label: "Contacts",        href: "/dashboard/contacts",       icon: Users },
-      { label: "Campaigns",       href: "/dashboard/campaigns",      icon: Megaphone },
+      { label: "Outbound AI Calls", href: "/dashboard/campaigns",    icon: Megaphone },
       { label: "Call History",    href: "/dashboard/call-logs",      icon: PhoneCall },
     ],
   },
