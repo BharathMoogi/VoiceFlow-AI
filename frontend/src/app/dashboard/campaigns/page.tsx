@@ -13,7 +13,11 @@ import {
   Users,
   Sliders,
   ChevronRight,
-  Info
+  Info,
+  Clock,
+  Phone,
+  PhoneCall,
+  PhoneOff
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
@@ -28,10 +32,13 @@ import {
   addContactsToCampaign, 
   removeContactFromCampaign,
   triggerCallCampaign,
+  getCallLogs,
   type Campaign,
   type AgentConfig,
-  type Contact
+  type Contact,
+  type CallLog
 } from "@/lib/api";
+
 
 export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -55,6 +62,7 @@ export default function CampaignsPage() {
 
   // Add contacts checklist state
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
+  const [callLogs, setCallLogs] = useState<CallLog[]>([]);
 
   // Status notifications
   const [error, setError] = useState<string | null>(null);
@@ -67,14 +75,16 @@ export default function CampaignsPage() {
   const loadInitialData = async () => {
     try {
       setLoading(true);
-      const [campaignsData, configsData, contactsData] = await Promise.all([
+      const [campaignsData, configsData, contactsData, callLogsData] = await Promise.all([
         getCampaigns(),
         getAgentConfigs(),
-        getContacts()
+        getContacts(),
+        getCallLogs()
       ]);
       setCampaigns(campaignsData);
       setConfigs(configsData);
       setAllContacts(contactsData);
+      setCallLogs(callLogsData);
       
       if (campaignsData.length > 0) {
         handleSelectCampaign(campaignsData[0]);
@@ -85,6 +95,7 @@ export default function CampaignsPage() {
       setLoading(false);
     }
   };
+
 
   const handleSelectCampaign = async (campaign: Campaign) => {
     setSelectedCampaign(campaign);
@@ -242,7 +253,21 @@ export default function CampaignsPage() {
     (c) => !selectedCampaignContacts.some((sc) => sc.id === c.id)
   );
 
+  // Calculate campaign stats
+  const campaignLogs = selectedCampaign ? callLogs.filter(log => log.campaign_id === selectedCampaign.id) : [];
+  const completedCalls = campaignLogs.filter(log => {
+    const s = log.status?.toLowerCase() || '';
+    return s === 'completed' || s === 'ended' || s === 'success';
+  }).length;
+  const failedCalls = campaignLogs.filter(log => {
+    const s = log.status?.toLowerCase() || '';
+    return s === 'failed' || s === 'error' || s === 'rejected';
+  }).length;
+  const totalContactsCount = selectedCampaignContacts.length;
+  const pendingCalls = Math.max(0, totalContactsCount - completedCalls - failedCalls);
+
   return (
+
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -392,6 +417,53 @@ export default function CampaignsPage() {
                 </CardHeader>
                 
                 <CardContent className="p-0">
+                  {/* Campaign Stats Grid */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-5 border-b border-white/[0.08]/40 bg-zinc-950/20">
+                    {/* Total Contacts */}
+                    <div className="p-4 rounded-xl bg-zinc-900/30 border border-white/[0.04] flex items-center gap-3">
+                      <div className="p-2.5 rounded-lg bg-indigo-500/10 text-indigo-400">
+                        <Users className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Total Contacts</p>
+                        <p className="text-lg font-bold text-white mt-0.5">{totalContactsCount}</p>
+                      </div>
+                    </div>
+
+                    {/* Pending Calls */}
+                    <div className="p-4 rounded-xl bg-zinc-900/30 border border-white/[0.04] flex items-center gap-3">
+                      <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-400">
+                        <Clock className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Pending Calls</p>
+                        <p className="text-lg font-bold text-white mt-0.5">{pendingCalls}</p>
+                      </div>
+                    </div>
+
+                    {/* Completed Calls */}
+                    <div className="p-4 rounded-xl bg-zinc-900/30 border border-white/[0.04] flex items-center gap-3">
+                      <div className="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+                        <PhoneCall className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Completed Calls</p>
+                        <p className="text-lg font-bold text-white mt-0.5">{completedCalls}</p>
+                      </div>
+                    </div>
+
+                    {/* Failed Calls */}
+                    <div className="p-4 rounded-xl bg-zinc-900/30 border border-white/[0.04] flex items-center gap-3">
+                      <div className="p-2.5 rounded-lg bg-rose-500/10 text-rose-400">
+                        <PhoneOff className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Failed Calls</p>
+                        <p className="text-lg font-bold text-white mt-0.5">{failedCalls}</p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="p-5 flex items-center justify-between border-b border-white/[0.08]/40">
                     <h3 className="text-sm font-semibold text-gray-300 flex items-center gap-2">
                       <Users className="h-4 w-4 text-violet-400" />
