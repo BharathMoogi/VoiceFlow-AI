@@ -1,8 +1,10 @@
+import csv
+import io
 import logging
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, UploadFile, File, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api import deps
@@ -14,6 +16,7 @@ from app.services.contact_service import contact_service
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
 
 @router.post("/", response_model=ContactResponse, status_code=status.HTTP_201_CREATED)
 async def create_contact(
@@ -77,3 +80,65 @@ async def delete_contact(
     return await contact_service.delete_contact(
         db=db, contact_id=contact_id, user_id=current_user.id
     )
+
+@router.post("/upload", response_model=List[ContactResponse])
+async def upload_contacts(
+    file: UploadFile = File(...),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(deps.get_current_active_user)
+) -> List[ContactResponse]:
+    """
+    Upload a CSV file of contacts, parse name and phone columns, and save to the database.
+    """
+    content = await file.read()
+    try:
+        text = content.decode('utf-8')
+    except UnicodeDecodeError:
+        text = content.decode('latin-1')
+        
+    csv_file = io.StringIO(text)
+    reader = csv.DictReader(csv_file)
+    
+    name_key = None
+    phone_key = None
+    status_key = None
+    
+    if not reader.fieldnames:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="CSV file must have headers."
+        )
+        
+    for field in reader.fieldnames:
+        norm = field.strip().lower()
+        if norm in ['name', 'fullname', 'full_name']:
+            name_key = field
+        elif norm in ['phone', 'phonenumber', 'phone_number', 'telephone']:
+            phone_key = field
+        elif norm in ['status']:
+            status_key = field
+            
+    if not name_key or not phone_key:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="CSV must contain 'name' (or 'fullname'/'full_name') and 'phone' (or 'phonenumber'/'phone_number') columns."
+        )
+        
+    imported_contacts = []
+    for row in reader:
+        name = row.get(name_key)
+        phone = row.get(phone_key)
+        status_val = row.get(status_key, "active") if status_key else "active"
+        
+        if name and phone:
+            name = name.strip()
+            phone = phone.strip()
+            if name and phone:
+                contact_in = ContactCreate(name=name, phone=phone, status=status_val)
+                contact = await contact_service.create_contact(
+                    db=db, user_id=current_user.id, contact_data=contact_in
+                )
+                imported_contacts.append(contact)
+                
+    return imported_contacts
+
