@@ -626,6 +626,41 @@ export async function triggerCallCampaign(campaignId: string): Promise<void> {
   }
 }
 
+export interface SingleCallResult {
+  callId: string;
+  callLogId: string;
+  status: string;
+  mode: 'live' | 'simulation';
+  message?: string;
+}
+
+export async function triggerSingleCall(
+  phone: string,
+  name: string,
+  options?: {
+    prompt?: string;
+    voiceId?: string;
+    campaignId?: string;
+    contactId?: string;
+  }
+): Promise<SingleCallResult> {
+  const token = getToken();
+  const res = await fetch('/api/vapi/outbound', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    },
+    body: JSON.stringify({ phone, name, ...options })
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Failed to initiate outbound call" }));
+    throw new Error(err.detail || "Failed to initiate outbound call");
+  }
+  return res.json();
+}
+
 // ---------- Translator ----------
 
 export interface TranslateResponse {

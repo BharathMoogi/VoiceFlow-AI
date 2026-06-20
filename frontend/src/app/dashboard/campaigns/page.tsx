@@ -32,6 +32,7 @@ import {
   addContactsToCampaign, 
   removeContactFromCampaign,
   triggerCallCampaign,
+  triggerSingleCall,
   getCallLogs,
   type Campaign,
   type AgentConfig,
@@ -63,6 +64,7 @@ export default function CampaignsPage() {
   // Add contacts checklist state
   const [selectedContactIds, setSelectedContactIds] = useState<string[]>([]);
   const [callLogs, setCallLogs] = useState<CallLog[]>([]);
+  const [callingContactIds, setCallingContactIds] = useState<Set<string>>(new Set());
 
   // Status notifications
   const [error, setError] = useState<string | null>(null);
@@ -246,6 +248,28 @@ export default function CampaignsPage() {
     setSelectedContactIds((prev) => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
+  };
+
+  const handleCallContact = async (contact: Contact) => {
+    if (callingContactIds.has(contact.id)) return;
+    setCallingContactIds(prev => new Set(prev).add(contact.id));
+    setError(null);
+    try {
+      const result = await triggerSingleCall(contact.phone, contact.name, {
+        campaignId: selectedCampaign?.id,
+        contactId: contact.id,
+      });
+      const modeLabel = result.mode === 'simulation' ? ' (simulation)' : '';
+      setSuccess(`📞 Calling ${contact.name}${modeLabel} — call initiated!`);
+    } catch (err: any) {
+      setError(err.message || `Failed to call ${contact.name}`);
+    } finally {
+      setCallingContactIds(prev => {
+        const next = new Set(prev);
+        next.delete(contact.id);
+        return next;
+      });
+    }
   };
 
   // Contacts that can be added (not already in selectedCampaignContacts)
@@ -496,25 +520,50 @@ export default function CampaignsPage() {
                     </div>
                   ) : (
                     <div className="divide-y divide-zinc-850/30 max-h-[350px] overflow-y-auto">
-                      {selectedCampaignContacts.map((contact) => (
-                        <div 
-                          key={contact.id} 
-                          className="flex items-center justify-between p-4 hover:bg-zinc-800/10 transition-colors"
-                        >
-                          <div>
-                            <p className="text-sm font-medium text-white">{contact.name}</p>
-                            <p className="text-xs text-gray-500">{contact.phone}</p>
-                          </div>
-                          <button
-                            onClick={() => handleRemoveContact(contact.id)}
-                            className="p-1 rounded text-gray-600 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-                            title="Remove contact from campaign"
-                            disabled={selectedCampaign.status === 'completed' || submitting}
+                      {selectedCampaignContacts.map((contact) => {
+                        const isCalling = callingContactIds.has(contact.id);
+                        return (
+                          <div 
+                            key={contact.id} 
+                            className="flex items-center justify-between p-4 hover:bg-zinc-800/10 transition-colors"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      ))}
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-white">{contact.name}</p>
+                              <p className="text-xs text-gray-500">{contact.phone}</p>
+                            </div>
+                            <div className="flex items-center gap-2 ml-3">
+                              {/* Per-contact single call button */}
+                              <button
+                                onClick={() => handleCallContact(contact)}
+                                disabled={isCalling || submitting}
+                                title={`Call ${contact.name}`}
+                                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                                  isCalling
+                                    ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 cursor-not-allowed'
+                                    : 'bg-violet-600/10 border border-violet-500/20 text-violet-400 hover:bg-violet-600/20 hover:border-violet-400/40'
+                                }`}
+                              >
+                                {isCalling ? (
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                  <Phone className="h-3 w-3" />
+                                )}
+                                {isCalling ? 'Calling…' : 'Call'}
+                              </button>
+
+                              {/* Remove contact button */}
+                              <button
+                                onClick={() => handleRemoveContact(contact.id)}
+                                className="p-1.5 rounded text-gray-600 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                                title="Remove contact from campaign"
+                                disabled={selectedCampaign.status === 'completed' || submitting}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </CardContent>
