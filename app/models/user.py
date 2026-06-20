@@ -14,6 +14,8 @@ class User(Base):
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
     conversations = relationship("Conversation", back_populates="user")
     emails = relationship("Email", back_populates="user")
+    contacts = relationship("Contact", back_populates="user", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshToken", back_populates="user")
+
     password_reset_tokens = relationship("PasswordResetToken", back_populates="user")
     email_verification_tokens = relationship("EmailVerificationToken", back_populates="user")
