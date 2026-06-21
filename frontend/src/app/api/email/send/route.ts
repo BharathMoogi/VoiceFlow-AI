@@ -8,7 +8,7 @@ const FROM_NAME = process.env.RESEND_FROM_NAME || 'VoiceFlow AI';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { to, subject, html } = body;
+    const { to, subject, html, senderName, senderEmail } = body;
 
     if (!to || !subject || !html) {
       return NextResponse.json(
@@ -26,12 +26,25 @@ export async function POST(req: Request) {
 
     const resend = new Resend(RESEND_API_KEY);
 
-    const { data, error } = await resend.emails.send({
-      from: `${FROM_NAME} <${FROM_EMAIL}>`,
+    const fromName = senderName || FROM_NAME;
+    const emailOptions: {
+      from: string;
+      to: string[];
+      subject: string;
+      html: string;
+      replyTo?: string;
+    } = {
+      from: `${fromName} <${FROM_EMAIL}>`,
       to: [to],
       subject,
       html,
-    });
+    };
+
+    if (senderEmail) {
+      emailOptions.replyTo = senderEmail;
+    }
+
+    const { data, error } = await resend.emails.send(emailOptions);
 
     if (error) {
       console.error('Resend error:', error);
