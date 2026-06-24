@@ -96,6 +96,33 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'Call log updated', status: finalStatus });
     }
 
+    if (eventType === 'recording-ready' && callData) {
+      const vapiCallId: string = callData.id || '';
+      const callLogId: string = metadata.call_log_id || '';
+      const recordingUrl: string = callData.recordingUrl || callData.recording_url || '';
+
+      console.log(`Recording-ready: LogID=${callLogId}, VapiID=${vapiCallId}, URL=${recordingUrl}`);
+
+      if (recordingUrl) {
+        const db = getInsforge();
+        if (callLogId) {
+          const { error } = await db
+            .from('call_logs')
+            .update({ recording_url: recordingUrl })
+            .eq('id', callLogId);
+          if (error) console.error('Failed to update recording by id:', error);
+        } else if (vapiCallId) {
+          const { error } = await db
+            .from('call_logs')
+            .update({ recording_url: recordingUrl })
+            .eq('vapi_call_id', vapiCallId);
+          if (error) console.error('Failed to update recording by vapi_call_id:', error);
+        }
+      }
+
+      return NextResponse.json({ message: 'Recording URL updated' });
+    }
+
     // Handle status-update events (optional — keeps call log in sync during call)
     if ((eventType === 'status-update' || eventType === 'call-update') && callData) {
       const vapiCallId: string = callData.id || '';
