@@ -77,8 +77,8 @@ export async function login(email: string, password: string): Promise<AuthTokens
   if (error) throw new Error(error.message);
   const token = data?.accessToken || "";
   if (!token) throw new Error("Login failed: no session returned. Please verify your email first.");
-  // SDK returns user.name directly on signInWithPassword response
-  const displayName = (data?.user as any)?.name || email.split('@')[0];
+  // SDK returns user.name directly on signInWithPassword response, check metadata as fallback
+  const displayName = (data?.user as any)?.name || (data?.user as any)?.user_metadata?.name || (data?.user as any)?.user_metadata?.full_name || email.split('@')[0];
   saveUserInfo(displayName, email);
   return {
     access_token: token,
@@ -100,7 +100,8 @@ export async function verifyEmailOTP(email: string, otp: string): Promise<AuthTo
 export async function register(
   full_name: string,
   email: string,
-  password: string
+  password: string,
+  phone?: string
 ): Promise<AuthTokens> {
   // InsForge SDK signUp() takes top-level `name` field (not options.data)
   const { data, error } = await insforge.auth.signUp({
@@ -113,7 +114,7 @@ export async function register(
   if (!token) {
     throw new Error("Registration succeeded but verification is required. Please verify your email first.");
   }
-  saveUserInfo(full_name, email);
+  saveUserInfo(full_name, email, "free", phone || "");
   return {
     access_token: token,
     refresh_token: data?.refreshToken || "",
@@ -163,6 +164,25 @@ export async function fetchMe(redirectOnFailure = false): Promise<UserProfile> {
         dbPlan = profile.plan || "free";
         dbName = profile.full_name || "";
         dbPhone = profile.phone || "";
+      } else {
+        // Profile row does not exist in DB yet! Let's insert a new profile row.
+        const localInfo = getUserInfo();
+        const initialName = (localInfo.name && localInfo.name !== "User" && !localInfo.name.includes("@"))
+          ? localInfo.name
+          : ((user as any)?.name || (user as any)?.user_metadata?.name || (user as any)?.user_metadata?.full_name || user.email?.split('@')[0] || "");
+        const initialPhone = localInfo.phone || "";
+        const initialPlan = localInfo.plan || "free";
+
+        const { error: insertErr } = await insforge
+          .from('profiles')
+          .insert([{ id: user.id, full_name: initialName, plan: initialPlan, phone: initialPhone }]);
+        if (!insertErr) {
+          dbName = initialName;
+          dbPhone = initialPhone;
+          dbPlan = initialPlan;
+        } else {
+          console.warn("Failed to create profile row on fetchMe:", insertErr);
+        }
       }
     }
   } catch (err) {

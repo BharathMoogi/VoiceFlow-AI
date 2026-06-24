@@ -11,6 +11,7 @@ import {
   KeyRound,
   User,
   ArrowRight,
+  Phone,
 } from "lucide-react";
 import { Button } from "@/components/UI/Button";
 import { Input } from "@/components/UI/Input";
@@ -61,6 +62,7 @@ function LandingPageInner() {
   const [activeTab, setActiveTab] = useState<"login" | "signup" | "verify" | "forgot_password" | "reset_password_code">("login");
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -128,7 +130,7 @@ function LandingPageInner() {
       setError("Passwords do not match.");
       return;
     }
-    if (activeTab !== "verify" && activeTab !== "forgot_password" && activeTab !== "reset_password_code" && (!email || !password || (activeTab === "signup" && !name))) {
+    if (activeTab !== "verify" && activeTab !== "forgot_password" && activeTab !== "reset_password_code" && (!email || !password || (activeTab === "signup" && (!name || !phone)))) {
       setError("Please fill out all fields.");
       return;
     }
@@ -139,7 +141,7 @@ function LandingPageInner() {
         const tokens = await login(email, password);
         saveTokens(tokens.access_token, tokens.refresh_token);
       } else if (activeTab === "signup") {
-        const tokens = await register(name, email, password);
+        const tokens = await register(name, email, password, phone);
         saveTokens(tokens.access_token, tokens.refresh_token);
       } else if (activeTab === "verify") {
         const tokens = await verifyEmailOTP(email, otp);
@@ -665,21 +667,38 @@ function LandingPageInner() {
                   )}
 
                   {activeTab === "signup" && (
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 mt-5">
-                        <User className="h-4 w-4" />
+                    <>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 mt-5">
+                          <User className="h-4 w-4" />
+                        </div>
+                        <Input
+                          label="Full Name"
+                          id="modal-name"
+                          type="text"
+                          placeholder="John Doe"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          className="pl-9 bg-[#0F172A]/80 border-white/[0.06] focus:border-violet-500/50 text-white"
+                          disabled={isLoading}
+                        />
                       </div>
-                      <Input
-                        label="Full Name"
-                        id="modal-name"
-                        type="text"
-                        placeholder="John Doe"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="pl-9 bg-[#0F172A]/80 border-white/[0.06] focus:border-violet-500/50 text-white"
-                        disabled={isLoading}
-                      />
-                    </div>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 mt-5">
+                          <Phone className="h-4 w-4" />
+                        </div>
+                        <Input
+                          label="Phone Number"
+                          id="modal-phone"
+                          type="tel"
+                          placeholder="+91 6303875878"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          className="pl-9 bg-[#0F172A]/80 border-white/[0.06] focus:border-violet-500/50 text-white"
+                          disabled={isLoading}
+                        />
+                      </div>
+                    </>
                   )}
 
                   {activeTab !== "verify" && activeTab !== "reset_password_code" && (
