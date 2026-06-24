@@ -142,12 +142,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileCl
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-[200] md:relative md:z-auto md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col border-r border-white/[0.05] min-h-screen shrink-0 bg-[#0d1117] ${
+        className={`fixed inset-y-0 left-0 z-[200] md:relative md:z-auto md:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col border-r border-white/[0.05] min-h-screen shrink-0 bg-sidebar ${
           mobileOpen ? "translate-x-0 shadow-2xl shadow-black/60" : "-translate-x-full"
         } ${
           collapsed ? "md:w-[68px]" : "md:w-[240px]"
         } w-[240px]`}
-        style={{ background: "#0d1117" }}
+        style={{ background: "var(--sidebar)" }}
       >
         {/* Subtle top gradient line */}
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
@@ -183,7 +183,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileCl
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
-            <p className="text-[13px] font-bold text-white leading-tight tracking-tight">
+            <p className="text-[13px] font-bold text-foreground leading-tight tracking-tight">
               VoiceFlow
               <span className="gradient-text-purple"> AI</span>
             </p>
@@ -318,7 +318,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen = false, onMobileCl
                 ) : (
                   <>
                     <div className="flex items-center justify-between">
-                      <p className="text-[13px] font-semibold text-white truncate">
+                      <p className="text-[13px] font-semibold text-foreground truncate">
                         {userInfo.name}
                       </p>
                       <button

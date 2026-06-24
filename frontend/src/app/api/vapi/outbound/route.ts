@@ -26,29 +26,64 @@ export async function POST(req: Request) {
     if (!authHeader) {
       return NextResponse.json({ detail: 'Missing Authorization header' }, { status: 401 });
     }
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.replace(/^[Bb]earer\s+/, '').trim().replace(/^"|"$/g, '');
 
     const userInsforge = createClient({
       baseUrl: INSFORGE_URL,
       anonKey: INSFORGE_KEY,
-      headers: { Authorization: `Bearer ${token}` },
+      isServerMode: true,
     });
+    userInsforge.setAccessToken(token);
 
     const { data, error: authError } = await userInsforge.auth.getCurrentUser();
     if (authError || !data?.user) {
-      return NextResponse.json({ detail: 'Unauthorized' }, { status: 401 });
+      console.error('Server auth check failed. authError:', authError, 'data:', data);
+      const errMsg = authError?.message || (authError as any)?.error || 'Session invalid or user not found';
+      
+      const debugInfo = {
+        url: INSFORGE_URL,
+        keyPrefix: INSFORGE_KEY ? `${INSFORGE_KEY.substring(0, 8)}...` : 'none',
+        tokenLen: token ? token.length : 0,
+        tokenPrefix: token ? `${token.substring(0, 15)}...${token.substring(token.length - 10)}` : 'none',
+      };
+      
+      return NextResponse.json({ 
+        detail: `Unauthorized: ${errMsg} (URL: ${debugInfo.url}, Key: ${debugInfo.keyPrefix}, TokenLen: ${debugInfo.tokenLen}, Token: ${debugInfo.tokenPrefix})` 
+      }, { status: 401 });
     }
     const user = data.user;
 
+    // ── Plan Quota Check ──────────────────────────────────────────────
+    const { data: profile } = await userInsforge
+      .from('profiles')
+      .select('plan')
+      .eq('id', user.id)
+      .single();
+    const plan = profile?.plan || 'free';
+
+    if (plan === 'free') {
+      const { count } = await userInsforge
+        .from('call_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      if (count !== null && count >= 3) {
+        return NextResponse.json({
+          detail: 'Free tier limit reached. You can make at most 3 calls on the Free plan. Please upgrade to Pro in Settings for unlimited calling!'
+        }, { status: 403 });
+      }
+    }
+
     // ── Input ─────────────────────────────────────────────────────────
     const body = await req.json();
-    const { phone, name, prompt, voiceId, campaignId, contactId } = body as {
+    const { phone, name, prompt, voiceId, campaignId, contactId, simulate } = body as {
       phone: string;
       name?: string;
       prompt?: string;
       voiceId?: string;
       campaignId?: string;
       contactId?: string;
+      simulate?: boolean;
     };
 
     if (!phone) {
@@ -80,8 +115,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ detail: 'Failed to create call log' }, { status: 500 });
     }
 
-    // ── Simulation mode (no real Vapi key) ────────────────────────────
-    if (VAPI_API_KEY === 'dummy_vapi_key' || !VAPI_API_KEY) {
+    // ── Simulation mode (explicitly requested or no real Vapi key) ───
+    if (simulate || VAPI_API_KEY === 'dummy_vapi_key' || !VAPI_API_KEY) {
       const simId = `sim_${Math.random().toString(36).substring(2, 11)}`;
       await userInsforge
         .from('call_logs')

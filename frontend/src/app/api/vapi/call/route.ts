@@ -23,22 +23,49 @@ export async function POST(req: Request) {
     if (!authHeader) {
       return NextResponse.json({ detail: 'Missing Authorization header' }, { status: 401 });
     }
-    const token = authHeader.replace('Bearer ', '');
+    const token = authHeader.replace(/^[Bb]earer\s+/, '').trim().replace(/^"|"$/g, '');
 
     const userInsforge = createClient({
       baseUrl: INSFORGE_URL,
       anonKey: INSFORGE_KEY,
-      headers: { Authorization: `Bearer ${token}` },
+      isServerMode: true,
     });
+    userInsforge.setAccessToken(token);
 
     const { data, error: authError } = await userInsforge.auth.getCurrentUser();
     if (authError || !data?.user) {
-      return NextResponse.json({ detail: 'Unauthorized' }, { status: 401 });
+      console.error('Server campaign call auth check failed. authError:', authError, 'data:', data);
+      const errMsg = authError?.message || (authError as any)?.error || 'Session invalid or user not found';
+      
+      const debugInfo = {
+        url: INSFORGE_URL,
+        keyPrefix: INSFORGE_KEY ? `${INSFORGE_KEY.substring(0, 8)}...` : 'none',
+        tokenLen: token ? token.length : 0,
+        tokenPrefix: token ? `${token.substring(0, 15)}...${token.substring(token.length - 10)}` : 'none',
+      };
+      
+      return NextResponse.json({ 
+        detail: `Unauthorized: ${errMsg} (URL: ${debugInfo.url}, Key: ${debugInfo.keyPrefix}, TokenLen: ${debugInfo.tokenLen}, Token: ${debugInfo.tokenPrefix})` 
+      }, { status: 401 });
     }
     const user = data.user;
 
+    // ── Plan Quota Check ──────────────────────────────────────────────
+    const { data: profile } = await userInsforge
+      .from('profiles')
+      .select('plan')
+      .eq('id', user.id)
+      .single();
+    const plan = profile?.plan || 'free';
+
+    if (plan === 'free') {
+      return NextResponse.json({
+        detail: 'Campaign dialing is a Premium feature. Please upgrade to Pro in Settings to dial campaigns!'
+      }, { status: 403 });
+    }
+
     // ── Parse body ────────────────────────────────────────────────────
-    const { campaignId } = await req.json();
+    const { campaignId, simulate } = await req.json();
     if (!campaignId) {
       return NextResponse.json({ detail: 'campaignId is required' }, { status: 400 });
     }
@@ -102,8 +129,8 @@ export async function POST(req: Request) {
           return;
         }
 
-        // ── Simulation mode ──────────────────────────────────────────
-        if (VAPI_API_KEY === 'dummy_vapi_key' || !VAPI_API_KEY) {
+        // ── Simulation mode (explicitly requested or no real Vapi key) ───
+        if (simulate || VAPI_API_KEY === 'dummy_vapi_key' || !VAPI_API_KEY) {
           await userInsforge
             .from('call_logs')
             .update({

@@ -39,19 +39,21 @@ export function isLoggedIn(): boolean {
 }
 
 // ---------- User info helpers ----------
-export function saveUserInfo(name: string, email?: string, plan?: string) {
+export function saveUserInfo(name: string, email?: string, plan?: string, phone?: string) {
   if (typeof window === "undefined") return;
   localStorage.setItem("user_name", name);
   if (email) localStorage.setItem("user_email", email);
   if (plan) localStorage.setItem("user_plan", plan);
+  if (phone !== undefined) localStorage.setItem("user_phone", phone);
 }
 
-export function getUserInfo(): { name: string; email: string; plan: string } {
-  if (typeof window === "undefined") return { name: "User", email: "", plan: "free" };
+export function getUserInfo(): { name: string; email: string; plan: string; phone: string } {
+  if (typeof window === "undefined") return { name: "User", email: "", plan: "free", phone: "" };
   return {
     name: localStorage.getItem("user_name") || "User",
     email: localStorage.getItem("user_email") || "",
     plan: localStorage.getItem("user_plan") || "free",
+    phone: localStorage.getItem("user_phone") || "",
   };
 }
 
@@ -130,6 +132,7 @@ export interface UserProfile {
   email: string;
   full_name: string;
   plan: string;
+  phone?: string;
   is_active: boolean;
 }
 
@@ -146,6 +149,7 @@ export async function fetchMe(redirectOnFailure = false): Promise<UserProfile> {
   // Try fetching actual profile row from database (which has the plan)
   let dbPlan = "free";
   let dbName = "";
+  let dbPhone = "";
   try {
     const userResult = await insforge.auth.getCurrentUser();
     if (userResult.data?.user) {
@@ -158,41 +162,79 @@ export async function fetchMe(redirectOnFailure = false): Promise<UserProfile> {
       if (profile) {
         dbPlan = profile.plan || "free";
         dbName = profile.full_name || "";
+        dbPhone = profile.phone || "";
       }
     }
   } catch (err) {
     console.warn("Failed to fetch profile from DB:", err);
   }
 
-  const { name, email, plan } = getUserInfo();
+  const { name, email, plan, phone } = getUserInfo();
   const finalPlan = dbPlan || plan || "free";
   const finalName = dbName || name || email;
+  const finalPhone = dbPhone || phone || "";
   
   // Sync back to local storage
-  saveUserInfo(finalName, email, finalPlan);
+  saveUserInfo(finalName, email, finalPlan, finalPhone);
 
   return {
     id: token,
     email,
     full_name: finalName,
     plan: finalPlan,
+    phone: finalPhone,
     is_active: true,
   };
 }
 
-export async function updateProfile(full_name: string) {
+export async function updateProfile(full_name: string, phone?: string) {
   // InsForge SDK uses setProfile() — updateUser() does not exist
   const { data, error } = await insforge.auth.setProfile({ nickname: full_name });
   if (error) throw new Error(error.message);
   // Always persist locally so the sidebar reflects the change immediately
   const email = getUserInfo().email || '';
-  saveUserInfo(full_name, email);
+  const plan = getUserInfo().plan || 'free';
+  saveUserInfo(full_name, email, plan, phone);
+
+  // Sync to database profiles table
+  try {
+    const userResult = await insforge.auth.getCurrentUser();
+    if (userResult.data?.user) {
+      const user = userResult.data.user;
+      const { data: existing } = await insforge
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      const updateData: any = { full_name };
+      if (phone !== undefined) {
+        updateData.phone = phone;
+      }
+
+      if (existing) {
+        const { error: updateErr } = await insforge
+          .from('profiles')
+          .update(updateData)
+          .eq('id', user.id);
+        if (updateErr) throw updateErr;
+      } else {
+        const { error: insertErr } = await insforge
+          .from('profiles')
+          .insert([{ id: user.id, full_name, plan, phone: phone || '' }]);
+        if (insertErr) throw insertErr;
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to sync profile updates to database:", err);
+  }
+
   return data;
 }
 
 // ---------- Email endpoints ----------
 export async function generateEmail(prompt: string): Promise<{ subject: string; body: string }> {
-  const { plan } = getUserInfo();
+  const { name, email, plan, phone } = getUserInfo();
   if (plan === "free") {
     const { count, error } = await insforge
       .from('email')
@@ -205,12 +247,21 @@ export async function generateEmail(prompt: string): Promise<{ subject: string; 
   // Call InsForge AI directly from the browser via the /insforge-proxy rewrite.
   // This avoids Node.js server-side TLS issues — the browser fetch goes through
   // Next.js rewrites: /insforge-proxy/* → https://qqskjqm7.us-east.insforge.app/*
+  let signatureContext = "";
+  if (name) {
+    signatureContext = `\nThe sender of this email is named "${name}".`;
+    if (email) signatureContext += ` Their email is "${email}".`;
+    if (phone) signatureContext += ` Their phone number is "${phone}".`;
+    signatureContext += " Please close the email with a professional sign-off (e.g. 'Best regards,' or 'Regards,') and write the sender's details exactly as provided (excluding any bracket placeholders or fake info).";
+  }
+
   const SYSTEM_PROMPT =
     "You are a helpful assistant that writes professional marketing, announcement, or outreach emails. " +
     "Output a valid JSON object with exactly two keys: " +
     "'subject' (a concise subject line string) and " +
     "'body' (the email body string with line breaks where appropriate). " +
-    "Return raw JSON only — no markdown fences.";
+    "Return raw JSON only — no markdown fences." +
+    signatureContext;
 
   const result = await insforge.ai.chat.completions.create({
     model: "openai/gpt-4o-mini",

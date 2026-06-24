@@ -21,3 +21,15 @@ export const insforge = createClient({
   baseUrl: insforgeUrl,
   anonKey: insforgeKey
 });
+
+// Auto-restore session token in browser context on startup
+if (typeof window !== "undefined") {
+  try {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      insforge.setAccessToken(token);
+    }
+  } catch (err) {
+    console.error("Failed to restore auth token:", err);
+  }
+}

@@ -18,12 +18,20 @@ export async function POST(req: Request) {
     // No auth guard — route uses InsForge anon key, not user JWT
 
     const body = await req.json();
-    const { prompt } = body;
+    const { prompt, userName, userEmail, userPhone } = body;
     if (!prompt) {
       return NextResponse.json({ detail: "Prompt is required" }, { status: 400 });
     }
 
     const insforge = getServerClient();
+
+    let signatureContext = "";
+    if (userName) {
+      signatureContext = `\nThe sender of this email is named "${userName}".`;
+      if (userEmail) signatureContext += ` Their email is "${userEmail}".`;
+      if (userPhone) signatureContext += ` Their phone number is "${userPhone}".`;
+      signatureContext += " Please close the email with a professional sign-off (e.g. 'Best regards,' or 'Regards,') and write the sender's details exactly as provided (excluding any bracket placeholders or fake info).";
+    }
 
     // Call the InsForge AI Chat completion gateway with anon key
     const completion = await insforge.ai.chat.completions.create({
@@ -36,7 +44,8 @@ export async function POST(req: Request) {
             "You must output a valid JSON object containing exactly two keys: " +
             "'subject' (a string containing a good subject line) and " +
             "'body' (a string containing the email body, formatted with line breaks if appropriate). " +
-            "Do not include any markdown wrappers or code block fences, just return raw JSON.",
+            "Do not include any markdown wrappers or code block fences, just return raw JSON." +
+            signatureContext,
         },
         {
           role: "user",

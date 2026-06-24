@@ -18,12 +18,21 @@ class AIService:
             except Exception:
                 self.client = None
 
-    async def generate_email(self, prompt: str) -> Dict[str, str]:
+    async def generate_email(
+        self,
+        prompt: str,
+        user_name: Optional[str] = None,
+        user_email: Optional[str] = None,
+        user_phone: Optional[str] = None,
+    ) -> Dict[str, str]:
         """
         Generate an email subject and body using Gemini based on a user prompt.
 
         Args:
             prompt (str): The instructions for the email generation.
+            user_name (str, optional): The name of the logged-in user.
+            user_email (str, optional): The email of the logged-in user.
+            user_phone (str, optional): The phone number of the logged-in user.
 
         Returns:
             Dict[str, str]: A dictionary containing 'subject' and 'body'.
@@ -40,6 +49,15 @@ class AIService:
             "You MUST respond ONLY with a valid JSON object containing exactly two keys: 'subject' and 'body'. "
             "Do not include markdown formatting like ```json or any other text outside the JSON object."
         )
+
+        if user_name:
+            signature_context = f"\nThe sender of this email is named '{user_name}'."
+            if user_email:
+                signature_context += f" Their email is '{user_email}'."
+            if user_phone:
+                signature_context += f" Their phone number is '{user_phone}'."
+            signature_context += " Please close the email with a professional sign-off (e.g. 'Best regards,' or 'Regards,') and write the sender's details exactly as provided."
+            system_instructions += signature_context
 
         full_prompt = f"{system_instructions}\n\nPrompt: {prompt}"
 

@@ -61,7 +61,11 @@ async def generate_email(
     """
     Generate an email subject and body using AI based on a prompt.
     """
-    return await ai_service.generate_email(prompt=request.prompt)
+    return await ai_service.generate_email(
+        prompt=request.prompt,
+        user_name=current_user.full_name,
+        user_email=current_user.email
+    )
 
 
 @router.post(

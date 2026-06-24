@@ -25,6 +25,30 @@
   --radius: 1rem;
 }
 
+.light {
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --sidebar: #FFFFFF;
+  --card: #FFFFFF;
+  --card-foreground: #0F172A;
+  --popover: #FFFFFF;
+  --popover-foreground: #0F172A;
+  --primary: #6D28D9;
+  --primary-foreground: #FFFFFF;
+  --secondary: #2563EB;
+  --secondary-foreground: #FFFFFF;
+  --accent: #16A34A;
+  --accent-foreground: #FFFFFF;
+  --muted: #E2E8F0;
+  --muted-foreground: #64748B;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --border: rgba(15, 23, 42, 0.08);
+  --input: #F1F5F9;
+  --ring: #6D28D9;
+}
+
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -272,3 +296,25 @@ body {
 .tooltip {
   animation: slideInUp 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
+/* ── Voice Waveform Animation ────────────────────────────────── */
+@keyframes soundwave {
+  0%, 100% { height: 8px; }
+  50% { height: 28px; }
+}
+.wave-bar {
+  display: inline-block;
+  width: 3px;
+  height: 8px;
+  background-color: var(--primary);
+  border-radius: 9999px;
+  animation: soundwave 1.2s ease-in-out infinite;
+}
+.wave-bar:nth-child(2) { animation-delay: 0.15s; }
+.wave-bar:nth-child(3) { animation-delay: 0.3s; }
+.wave-bar:nth-child(4) { animation-delay: 0.45s; }
+.wave-bar:nth-child(5) { animation-delay: 0.6s; }
+.wave-bar:nth-child(6) { animation-delay: 0.35s; }
+.wave-bar:nth-child(7) { animation-delay: 0.2s; }
+.wave-bar:nth-child(8) { animation-delay: 0.5s; }
+

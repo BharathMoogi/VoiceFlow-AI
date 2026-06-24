@@ -8,7 +8,8 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
-import { saveEmailDraft, sendEmail, translateText } from "@/lib/api";
+import { saveEmailDraft, sendEmail, translateText, getUserInfo } from "@/lib/api";
+import { insforge } from "@/lib/insforge";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Stage =
@@ -60,9 +61,10 @@ declare global {
 }
 
 // ── API helpers ────────────────────────────────────────────────────────────────
-async function callTranscribeAPI(file: File): Promise<string> {
+async function callTranscribeAPI(file: File, language = 'auto'): Promise<string> {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("language", language);
   const res = await fetch("/api/speech/transcribe", { method: "POST", body: formData });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: "Transcription failed" }));
@@ -73,10 +75,11 @@ async function callTranscribeAPI(file: File): Promise<string> {
 }
 
 async function callEmailAPI(prompt: string): Promise<{ subject: string; body: string }> {
+  const { name, email, phone } = getUserInfo();
   const res = await fetch("/api/email/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, userName: name, userEmail: email, userPhone: phone }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: "Generation failed" }));
@@ -89,6 +92,8 @@ async function callEmailAPI(prompt: string): Promise<{ subject: string; body: st
 export default function VoiceUploadPage() {
   // Pipeline state
   const [stage, setStage]             = useState<Stage>("idle");
+  const [isPro, setIsPro]             = useState(false);
+  const [emailCount, setEmailCount]   = useState(0);
   const [errorStage, setErrorStage]   = useState<Stage | null>(null);
   const [errorMsg, setErrorMsg]       = useState("");
   const [transcript, setTranscript]   = useState("");          // raw transcription (may be non-English)
@@ -136,6 +141,18 @@ export default function VoiceUploadPage() {
   useEffect(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     Promise.resolve().then(() => setHasSpeechAPI(!!SR));
+
+    const stored = getUserInfo();
+    setIsPro(stored.plan === "pro");
+
+    insforge
+      .from('email')
+      .select('*', { count: 'exact', head: true })
+      .then(({ count }: { count: number | null }) => {
+        if (count !== null) setEmailCount(count);
+      })
+      .catch(() => {});
+
     return () => teardown();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -231,6 +248,7 @@ export default function VoiceUploadPage() {
       setEmailSubject(result.subject || "");
       setEmailBody(result.body || "");
       setStage("done");
+      setEmailCount(prev => prev + 1);
     } catch (err: unknown) {
       setErrorMsg((err instanceof Error ? err.message : null) || "Email generation failed.");
       setErrorStage("generating");
@@ -240,6 +258,12 @@ export default function VoiceUploadPage() {
 
   // ── File upload pipeline ──────────────────────────────────────────────────────
   const runFilePipeline = async (file: File) => {
+    if (!isPro && emailCount >= 5) {
+      setErrorMsg("Free tier limit reached. You can generate at most 5 emails on the Free plan. Please upgrade to Pro in Settings for unlimited email generation!");
+      setErrorStage("transcribing");
+      setStage("error");
+      return;
+    }
     setAudioFile(file);
     setStage("transcribing");
     setErrorMsg(""); setErrorStage(null);
@@ -248,7 +272,7 @@ export default function VoiceUploadPage() {
     setIsSaved(false); setSendSuccess(false); setSaveSuccess(false); setActionError(null);
     finalRef.current = "";
     try {
-      const text = await callTranscribeAPI(file);
+      const text = await callTranscribeAPI(file, selectedLang);
       await runTranslateAndGenerate(text);
     } catch (err: unknown) {
       setErrorMsg((err instanceof Error ? err.message : null) || "Transcription failed.");
@@ -259,6 +283,12 @@ export default function VoiceUploadPage() {
 
   // ── Live recording ────────────────────────────────────────────────────────────
   const startRecording = async () => {
+    if (!isPro && emailCount >= 5) {
+      setErrorMsg("Free tier limit reached. You can generate at most 5 emails on the Free plan. Please upgrade to Pro in Settings for unlimited email generation!");
+      setErrorStage("recording");
+      setStage("error");
+      return;
+    }
     setErrorMsg(""); setLiveText(""); setTranscript(""); setTranslatedText(""); setDetectedLang(null);
     setEmailSubject(""); setEmailBody(""); setIsSaved(false);
     setSendSuccess(false); setSaveSuccess(false); setActionError(null);
@@ -300,7 +330,9 @@ export default function VoiceUploadPage() {
       recognitionRef.current = recognition;
       recognition.continuous     = true;
       recognition.interimResults = true;
-      // Use selected language for better transcription accuracy
+      // When 'auto': browser Speech API doesn't support true multi-language detection,
+      // so we use empty string (browser default). The recorded file goes through
+      // Gemini which handles all languages perfectly.
       recognition.lang = selectedLang === "auto" ? "" : selectedLang;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -367,7 +399,7 @@ export default function VoiceUploadPage() {
             if (blob.size === 0) throw new Error("No audio was captured. Please try again.");
             const file = new File([blob], `recording-${Date.now()}.webm`, { type: rec.mimeType });
             setAudioFile(file);
-            const text = await callTranscribeAPI(file);
+            const text = await callTranscribeAPI(file, selectedLang);
             await runTranslateAndGenerate(text);
           } catch (err: unknown) {
             setErrorMsg((err instanceof Error ? err.message : null) || "Transcription failed.");

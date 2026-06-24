@@ -16,7 +16,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
 import { Input } from "@/components/UI/Input";
-import { getAgentConfigs, createAgentConfig, updateAgentConfig, deleteAgentConfig, type AgentConfig } from "@/lib/api";
+import { getAgentConfigs, createAgentConfig, updateAgentConfig, deleteAgentConfig, getUserInfo, type AgentConfig } from "@/lib/api";
 
 const VOICE_OPTIONS = [
   { id: "josh", name: "Josh (Deep American Male - PlayHT)" },
@@ -30,6 +30,7 @@ export default function AgentConfigsPage() {
   const [configs, setConfigs] = useState<AgentConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [isPro, setIsPro] = useState(false);
   
   // Editor modal state
   const [showModal, setShowModal] = useState(false);
@@ -47,6 +48,8 @@ export default function AgentConfigsPage() {
 
   useEffect(() => {
     loadConfigs();
+    const stored = getUserInfo();
+    setIsPro(stored.plan === "pro");
   }, []);
 
   const loadConfigs = async () => {
@@ -142,10 +145,22 @@ export default function AgentConfigsPage() {
           </p>
         </div>
         
-        <Button size="sm" onClick={handleOpenCreate} className="h-10">
-          <Plus className="h-4 w-4 mr-2" />
-          Create Config
-        </Button>
+        {!isPro && configs.length >= 1 ? (
+          <div className="flex flex-col items-end gap-1">
+            <Button size="sm" disabled className="h-10 opacity-50 cursor-not-allowed">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Config
+            </Button>
+            <span className="text-[10px] text-violet-400 font-semibold tracking-wider uppercase">
+              Free Tier Limit Reached
+            </span>
+          </div>
+        ) : (
+          <Button size="sm" onClick={handleOpenCreate} className="h-10">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Config
+          </Button>
+        )}
       </div>
 
       {/* Notifications */}
@@ -281,11 +296,15 @@ export default function AgentConfigsPage() {
                       className="w-full rounded-lg border border-white/[0.08] bg-zinc-950 p-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50"
                       disabled={submitting}
                     >
-                      {VOICE_OPTIONS.map((opt) => (
-                        <option key={opt.id} value={opt.id}>
-                          {opt.name}
-                        </option>
-                      ))}
+                      {VOICE_OPTIONS.map((opt) => {
+                        const isPremiumVoice = ["rachel", "paul"].includes(opt.id);
+                        const isDisabled = isPremiumVoice && !isPro;
+                        return (
+                          <option key={opt.id} value={opt.id} disabled={isDisabled}>
+                            {opt.name} {isDisabled ? " (Pro Only)" : ""}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 

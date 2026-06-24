@@ -329,7 +329,7 @@ export default function CallLogsPage() {
                           </div>
                           <div className={`p-3 rounded-2xl max-w-[85%] text-xs leading-relaxed ${
                             isAgent 
-                              ? "bg-[#1F2937]text-zinc-100 rounded-tl-none border border-white/[0.08]/40" 
+                              ? "bg-[#1F2937] text-zinc-100 rounded-tl-none border border-white/[0.08]/40" 
                               : "bg-violet-600/90 text-white rounded-tr-none shadow-sm shadow-indigo-600/10"
                           }`}>
                             {msg.content}

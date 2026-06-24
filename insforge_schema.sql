@@ -1,6 +1,8 @@
 CREATE TABLE IF NOT EXISTS public.profiles (
   id uuid references auth.users(id) on delete cascade not null primary key,
-  full_name text
+  full_name text,
+  plan text default 'free',
+  phone text
 );
 
 CREATE TABLE IF NOT EXISTS public.conversation (
@@ -115,3 +117,17 @@ CREATE POLICY "Users can manage own call logs" ON public.call_logs FOR ALL USING
 CREATE POLICY "Users can manage own campaign contacts" ON public.campaign_contacts FOR ALL USING (
   campaign_id IN (SELECT id FROM public.campaigns WHERE user_id = auth.uid())
 );
+
+-- Feedback Table
+CREATE TABLE IF NOT EXISTS public.feedback (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  rating integer not null,
+  comment text,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+ALTER TABLE public.feedback ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage own feedback" ON public.feedback FOR ALL USING (auth.uid() = user_id);
+

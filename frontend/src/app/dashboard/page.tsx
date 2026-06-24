@@ -275,18 +275,35 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          {/* CTA */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            <Link href="/dashboard/voice-upload">
-              <Button variant="primary" size="md" leftIcon={<Mic className="h-3.5 w-3.5" />}>
-                Record Voice
-              </Button>
-            </Link>
-            <Link href="/dashboard/email-generator">
-              <Button variant="outline" size="md" leftIcon={<Wand2 className="h-3.5 w-3.5" />}>
-                Generate Email
-              </Button>
-            </Link>
+          {/* Live Waveform Visualizer & CTA */}
+          <div className="flex items-center gap-4 shrink-0">
+            {/* Live Waveform Visualizer */}
+            <div className="hidden lg:flex items-center gap-2 bg-white/[0.02] border border-white/[0.05] rounded-xl px-4 py-2.5 shadow-inner">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-gray-500 mr-1">Voice Engine State</span>
+              <div className="flex items-end gap-0.5 h-7">
+                <div className="wave-bar" style={{ animationDuration: "1.0s", backgroundColor: "#8B5CF6" }} />
+                <div className="wave-bar" style={{ animationDuration: "1.4s", backgroundColor: "#A78BFA" }} />
+                <div className="wave-bar" style={{ animationDuration: "0.8s", backgroundColor: "#60A5FA" }} />
+                <div className="wave-bar" style={{ animationDuration: "1.2s", backgroundColor: "#3B82F6" }} />
+                <div className="wave-bar" style={{ animationDuration: "1.5s", backgroundColor: "#22C55E" }} />
+                <div className="wave-bar" style={{ animationDuration: "0.9s", backgroundColor: "#34D399" }} />
+                <div className="wave-bar" style={{ animationDuration: "1.3s", backgroundColor: "#A78BFA" }} />
+                <div className="wave-bar" style={{ animationDuration: "1.1s", backgroundColor: "#8B5CF6" }} />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <Link href="/dashboard/voice-upload">
+                <Button variant="primary" size="md" leftIcon={<Mic className="h-3.5 w-3.5" />}>
+                  Record Voice
+                </Button>
+              </Link>
+              <Link href="/dashboard/email-generator">
+                <Button variant="outline" size="md" leftIcon={<Wand2 className="h-3.5 w-3.5" />}>
+                  Generate Email
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </div>

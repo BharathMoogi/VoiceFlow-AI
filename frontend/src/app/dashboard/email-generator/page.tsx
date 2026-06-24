@@ -18,7 +18,8 @@ import {
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
 import { Input, TextArea } from "@/components/UI/Input";
-import { generateEmail, saveEmailDraft, sendEmail } from "@/lib/api";
+import { generateEmail, saveEmailDraft, sendEmail, getUserInfo } from "@/lib/api";
+import { insforge } from "@/lib/insforge";
 
 const templates = [
   { label: "Follow-up Email", prompt: "Write a professional follow-up email after a business meeting with action items." },
@@ -47,6 +48,8 @@ export default function EmailGeneratorPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [isPro, setIsPro] = useState(false);
+  const [emailCount, setEmailCount] = useState(0);
 
   useEffect(() => {
     const draft = sessionStorage.getItem("voiceflow_email_draft");
@@ -57,16 +60,32 @@ export default function EmailGeneratorPage() {
       });
       sessionStorage.removeItem("voiceflow_email_draft");
     }
+
+    const stored = getUserInfo();
+    setIsPro(stored.plan === "pro");
+
+    insforge
+      .from('email')
+      .select('*', { count: 'exact', head: true })
+      .then(({ count }: { count: number | null }) => {
+        if (count !== null) setEmailCount(count);
+      })
+      .catch(() => {});
   }, []);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
+    if (!isPro && emailCount >= 5) {
+      setActionError("Free tier limit reached. You can generate at most 5 emails on the Free plan. Please upgrade to Pro in Settings for unlimited email generation!");
+      return;
+    }
     setIsGenerating(true);
     setGeneratedEmail(null);
     setActionError(null);
     try {
       const result = await generateEmail(prompt);
       setGeneratedEmail(result);
+      setEmailCount(prev => prev + 1);
     } catch (err: any) {
       console.error(err);
       setActionError(err.message || "Failed to generate email");
@@ -225,16 +244,35 @@ export default function EmailGeneratorPage() {
                 </div>
               </div>
 
-              <Button
-                onClick={handleGenerate}
-                isLoading={isGenerating}
-                disabled={!prompt.trim() || isGenerating}
-                className="w-full"
-                id="generate-email-btn"
-              >
-                <Zap className="h-4 w-4 mr-2" />
-                Generate with Gemini AI
-              </Button>
+              {!isPro && emailCount >= 5 ? (
+                <div className="space-y-3 w-full">
+                  <Button
+                    disabled
+                    className="w-full opacity-50 cursor-not-allowed"
+                    id="generate-email-btn"
+                  >
+                    <Zap className="h-4 w-4 mr-2" />
+                    Generate with Gemini AI
+                  </Button>
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-violet-600/10 to-indigo-600/10 border border-violet-500/20 text-center">
+                    <p className="text-xs text-violet-300 font-bold mb-1.5 font-sans">Free Generation Limit Reached</p>
+                    <p className="text-[11px] text-gray-400 leading-normal font-sans">
+                      You have generated {emailCount} emails. Upgrade to Pro in Settings to enjoy unlimited email generation!
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  onClick={handleGenerate}
+                  isLoading={isGenerating}
+                  disabled={!prompt.trim() || isGenerating}
+                  className="w-full"
+                  id="generate-email-btn"
+                >
+                  <Zap className="h-4 w-4 mr-2" />
+                  Generate with Gemini AI
+                </Button>
+              )}
             </CardContent>
           </Card>
 

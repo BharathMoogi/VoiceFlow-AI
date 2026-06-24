@@ -34,6 +34,7 @@ import {
   triggerCallCampaign,
   triggerSingleCall,
   getCallLogs,
+  getUserInfo,
   type Campaign,
   type AgentConfig,
   type Contact,
@@ -69,9 +70,17 @@ export default function CampaignsPage() {
   // Status notifications
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [simulateMode, setSimulateMode] = useState(true);
+  const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
     loadInitialData();
+    const stored = getUserInfo();
+    setIsPro(stored.plan === "pro");
+    
+    // Poll for call and campaign updates every 7 seconds
+    const interval = setInterval(loadDataSilent, 7000);
+    return () => clearInterval(interval);
   }, []);
 
   const loadInitialData = async () => {
@@ -95,6 +104,32 @@ export default function CampaignsPage() {
       setError(err.message || "Failed to load campaigns data");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadDataSilent = async () => {
+    try {
+      const [campaignsData, callLogsData] = await Promise.all([
+        getCampaigns(),
+        getCallLogs()
+      ]);
+      setCampaigns(campaignsData);
+      setCallLogs(callLogsData);
+      
+      // Update selected campaign reference if it exists
+      setSelectedCampaign((curr) => {
+        if (!curr) return null;
+        const updated = campaignsData.find(c => c.id === curr.id);
+        
+        // Silent reload of campaign contacts to update details
+        getCampaignContacts(curr.id).then(data => {
+          setSelectedCampaignContacts(data);
+        }).catch(() => {});
+        
+        return updated || curr;
+      });
+    } catch {
+      // ignore silent fetch failures
     }
   };
 
@@ -177,6 +212,10 @@ export default function CampaignsPage() {
 
   const handleLaunchCampaign = async () => {
     if (!selectedCampaign) return;
+    if (!isPro) {
+      setError("Campaign dialing is a Premium feature. Please upgrade to Pro in Settings to dial campaigns.");
+      return;
+    }
     if (selectedCampaignContacts.length === 0) {
       setError("Please add at least one contact to the campaign before launching.");
       return;
@@ -186,7 +225,7 @@ export default function CampaignsPage() {
     setSubmitting(true);
 
     try {
-      await triggerCallCampaign(selectedCampaign.id);
+      await triggerCallCampaign(selectedCampaign.id, simulateMode);
       
       // Update local state
       const updated = { ...selectedCampaign, status: 'active' };
@@ -258,6 +297,7 @@ export default function CampaignsPage() {
       const result = await triggerSingleCall(contact.phone, contact.name, {
         campaignId: selectedCampaign?.id,
         contactId: contact.id,
+        simulate: simulateMode,
       });
       const modeLabel = result.mode === 'simulation' ? ' (simulation)' : '';
       setSuccess(`📞 Calling ${contact.name}${modeLabel} — call initiated!`);
@@ -305,10 +345,22 @@ export default function CampaignsPage() {
           </p>
         </div>
         
-        <Button size="sm" onClick={() => { setShowCreateModal(true); setError(null); }} className="h-10">
-          <Plus className="h-4 w-4 mr-2" />
-          Create Campaign
-        </Button>
+        {!isPro && campaigns.length >= 1 ? (
+          <div className="flex flex-col items-end gap-1">
+            <Button size="sm" disabled className="h-10 opacity-50 cursor-not-allowed">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Campaign
+            </Button>
+            <span className="text-[10px] text-violet-400 font-semibold tracking-wider uppercase">
+              Free Tier Limit Reached
+            </span>
+          </div>
+        ) : (
+          <Button size="sm" onClick={() => { setShowCreateModal(true); setError(null); }} className="h-10">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Campaign
+          </Button>
+        )}
       </div>
 
       {/* Notifications */}
@@ -412,7 +464,25 @@ export default function CampaignsPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
+                    {/* Simulation Mode Toggle */}
+                    <div className="flex items-center gap-2 bg-zinc-950 px-3.5 py-2 rounded-lg border border-white/[0.06] text-xs font-semibold">
+                      <span className="text-gray-400">Simulation:</span>
+                      <button
+                        type="button"
+                        onClick={() => setSimulateMode(!simulateMode)}
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          simulateMode ? 'bg-violet-600' : 'bg-zinc-700'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                            simulateMode ? 'translate-x-4' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
                     <button
                       onClick={() => handleDeleteCampaign(selectedCampaign.id)}
                       className="p-2.5 rounded-lg border border-white/[0.08] bg-zinc-950 text-gray-500 hover:text-rose-400 hover:border-rose-500/10 transition-all duration-200"
@@ -431,10 +501,10 @@ export default function CampaignsPage() {
                           selectedCampaign.status === 'active'
                             ? "bg-emerald-600 hover:bg-emerald-500"
                             : "bg-violet-600 hover:bg-violet-500"
-                        }`}
+                        } ${!isPro ? "opacity-50" : ""}`}
                       >
                         <Play className="h-4 w-4 mr-2 fill-current" />
-                        {selectedCampaign.status === 'active' ? "Call Remainder" : "Launch Campaign"}
+                        {selectedCampaign.status === 'active' ? "Call Remainder" : "Launch Campaign"} {!isPro && "(Pro Only)"}
                       </Button>
                     )}
                   </div>
