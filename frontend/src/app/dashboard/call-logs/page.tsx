@@ -286,6 +286,19 @@ export default function CallLogsPage() {
             </CardHeader>
             
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {/* Call Connection Issue Alert */}
+              {(selectedLog.status === 'failed' || selectedLog.status === 'error' || selectedLog.status === 'busy' || selectedLog.status === 'no-answer') && (
+                <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 space-y-1">
+                  <span className="text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                    <AlertCircle className="h-4 w-4" />
+                    Call Connection Issue ({selectedLog.status.toUpperCase()})
+                  </span>
+                  <p className="text-sm font-medium">
+                    {selectedLog.summary || "The call could not connect. No details were returned by the carrier."}
+                  </p>
+                </div>
+              )}
+
               {/* Call Recording Playback */}
               {selectedLog.recording_url && (
                 <div className="p-4 rounded-xl border border-violet-500/25 bg-violet-500/5 space-y-2.5">
