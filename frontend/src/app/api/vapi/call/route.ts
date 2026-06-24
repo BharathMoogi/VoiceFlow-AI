@@ -65,9 +65,22 @@ export async function POST(req: Request) {
     }
 
     // ── Parse body ────────────────────────────────────────────────────
-    const { campaignId, simulate } = await req.json();
+    const { campaignId } = await req.json();
     if (!campaignId) {
       return NextResponse.json({ detail: 'campaignId is required' }, { status: 400 });
+    }
+
+    // ── Vapi credential validation ────────────────────────────────────
+    if (VAPI_API_KEY === 'dummy_vapi_key' || !VAPI_API_KEY) {
+      return NextResponse.json({
+        detail: 'Vapi API key is not configured. Please set a valid VAPI_API_KEY in frontend/.env.local.'
+      }, { status: 400 });
+    }
+
+    if (!VAPI_PHONE_NUMBER_ID) {
+      return NextResponse.json({
+        detail: 'Vapi Phone Number ID is not configured. Please set your VAPI_PHONE_NUMBER_ID in frontend/.env.local.'
+      }, { status: 400 });
     }
 
     // ── Fetch campaign with agent config ─────────────────────────────
@@ -131,17 +144,6 @@ export async function POST(req: Request) {
           return;
         }
 
-        // ── Simulation mode (explicitly requested or no real Vapi key) ───
-        if (simulate || VAPI_API_KEY === 'dummy_vapi_key' || !VAPI_API_KEY) {
-          await userInsforge
-            .from('call_logs')
-            .update({
-              status: 'calling',
-              vapi_call_id: `sim_${Math.random().toString(36).substring(2, 11)}`,
-            })
-            .eq('id', callLog.id);
-          return;
-        }
 
         // ── Real Vapi call ───────────────────────────────────────────
         try {
@@ -209,7 +211,7 @@ export async function POST(req: Request) {
             if (parsed.message) {
               friendlyError = parsed.message;
               if (parsed.message.includes('Free Vapi numbers do not support international calls')) {
-                friendlyError = "Free Vapi numbers do not support international calls. Please configure a custom carrier or upgrade in Vapi Dashboard, or toggle 'Simulation' mode.";
+                friendlyError = "Free Vapi numbers do not support international calls. Please configure a custom carrier or upgrade in the Vapi Dashboard.";
               }
             }
           } catch (_) {}
@@ -228,7 +230,7 @@ export async function POST(req: Request) {
       message: 'Campaign calls triggered',
       total: contacts.length,
       failed,
-      mode: VAPI_API_KEY === 'dummy_vapi_key' ? 'simulation' : 'live',
+      mode: 'live',
     });
   } catch (error: any) {
     console.error('Campaign call route error:', error);

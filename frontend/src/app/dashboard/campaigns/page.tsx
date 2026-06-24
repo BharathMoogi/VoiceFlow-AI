@@ -72,7 +72,6 @@ export default function CampaignsPage() {
   // Status notifications
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [simulateMode, setSimulateMode] = useState(true);
   const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
@@ -227,7 +226,7 @@ export default function CampaignsPage() {
     setSubmitting(true);
 
     try {
-      await triggerCallCampaign(selectedCampaign.id, simulateMode);
+      await triggerCallCampaign(selectedCampaign.id);
       
       // Update local state
       const updated = { ...selectedCampaign, status: 'active' };
@@ -339,10 +338,8 @@ export default function CampaignsPage() {
       const result = await triggerSingleCall(contact.phone, contact.name, {
         campaignId: selectedCampaign?.id,
         contactId: contact.id,
-        simulate: simulateMode,
       });
-      const modeLabel = result.mode === 'simulation' ? ' (simulation)' : '';
-      setSuccess(`📞 Calling ${contact.name}${modeLabel} — call initiated!`);
+      setSuccess(`📞 Calling ${contact.name} — call initiated!`);
     } catch (err: any) {
       setError(err.message || `Failed to call ${contact.name}`);
     } finally {
@@ -507,23 +504,6 @@ export default function CampaignsPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    {/* Simulation Mode Toggle */}
-                    <div className="flex items-center gap-2 bg-zinc-950 px-3.5 py-2 rounded-lg border border-white/[0.06] text-xs font-semibold">
-                      <span className="text-gray-400">Simulation:</span>
-                      <button
-                        type="button"
-                        onClick={() => setSimulateMode(!simulateMode)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                          simulateMode ? 'bg-violet-600' : 'bg-zinc-700'
-                        }`}
-                      >
-                        <span
-                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                            simulateMode ? 'translate-x-4' : 'translate-x-0'
-                          }`}
-                        />
-                      </button>
-                    </div>
 
                     <button
                       onClick={() => handleDeleteCampaign(selectedCampaign.id)}
@@ -660,7 +640,7 @@ export default function CampaignsPage() {
                                       }`}
                                       title={contactLog.summary || undefined}
                                     >
-                                      {contactLog.vapi_call_id?.startsWith('sim_') ? `SIM ${contactLog.status}` : contactLog.status}
+                                      {contactLog.status}
                                     </span>
                                   </>
                                 )}

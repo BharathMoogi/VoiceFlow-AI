@@ -76,14 +76,13 @@ export async function POST(req: Request) {
 
     // ── Input ─────────────────────────────────────────────────────────
     const body = await req.json();
-    const { phone, name, prompt, voiceId, campaignId, contactId, simulate, language } = body as {
+    const { phone, name, prompt, voiceId, campaignId, contactId, language } = body as {
       phone: string;
       name?: string;
       prompt?: string;
       voiceId?: string;
       campaignId?: string;
       contactId?: string;
-      simulate?: boolean;
       language?: string;
     };
 
@@ -138,21 +137,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ detail: 'Failed to create call log' }, { status: 500 });
     }
 
-    // ── Simulation mode (explicitly requested or no real Vapi key) ───
-    if (simulate || VAPI_API_KEY === 'dummy_vapi_key' || !VAPI_API_KEY) {
-      const simId = `sim_${Math.random().toString(36).substring(2, 11)}`;
-      await userInsforge
-        .from('call_logs')
-        .update({ status: 'calling', vapi_call_id: simId })
-        .eq('id', callLog.id);
-
+    // ── Vapi credential validation ────────────────────────────────────
+    if (VAPI_API_KEY === 'dummy_vapi_key' || !VAPI_API_KEY) {
+      await userInsforge.from('call_logs').delete().eq('id', callLog.id);
       return NextResponse.json({
-        callId: simId,
-        callLogId: callLog.id,
-        status: 'calling',
-        mode: 'simulation',
-        message: 'Simulation mode — set a real VAPI_API_KEY to place live calls',
-      });
+        detail: 'Vapi API key is not configured. Please set a valid VAPI_API_KEY in frontend/.env.local.'
+      }, { status: 400 });
+    }
+
+    if (!VAPI_PHONE_NUMBER_ID) {
+      await userInsforge.from('call_logs').delete().eq('id', callLog.id);
+      return NextResponse.json({
+        detail: 'Vapi Phone Number ID is not configured. Please set your VAPI_PHONE_NUMBER_ID in frontend/.env.local.'
+      }, { status: 400 });
     }
 
     // ── Real Vapi outbound call ───────────────────────────────────────

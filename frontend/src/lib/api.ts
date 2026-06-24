@@ -773,115 +773,12 @@ export async function getCallLogs(): Promise<CallLog[]> {
 
   const logs: CallLog[] = (data as CallLog[]) || [];
   
-  // Simulation auto-completion check
-  const now = new Date().getTime();
-  const callingSims = logs.filter((log: CallLog) => 
-    log.status === 'calling' && 
-    log.vapi_call_id?.startsWith('sim_') &&
-    log.created_at &&
-    (now - new Date(log.created_at).getTime() > 8000) // 8 seconds elapsed
-  );
 
-  if (callingSims.length > 0) {
-    // Process updates in background/async to not block the current request
-    Promise.all(callingSims.map(async (log: CallLog) => {
-      const contactName = log.contact_name || log.contacts?.name || 'Contact';
-      const campaignName = log.campaigns?.name || 'Outbound campaign';
-      const agentName = log.campaigns?.voice_agent_configurations?.name || 'VoiceFlow AI';
-      
-      // Generate mock call details
-      const duration = Math.floor(Math.random() * 30) + 15; // 15 to 45s
-      const rand = Math.random();
-      let status = 'completed';
-      let summary = '';
-      let transcript = '';
-
-      if (rand < 0.1) {
-        status = 'busy';
-        summary = `Attempted call to ${contactName}. The line was busy.`;
-      } else if (rand < 0.15) {
-        status = 'no-answer';
-        summary = `Attempted call to ${contactName}. There was no answer.`;
-      } else {
-        status = 'completed';
-        summary = `Successfully connected with ${contactName} regarding the "${campaignName}" campaign. The contact confirmed receipt of the updates and had no further questions.`;
-        transcript = `Agent: Hello, is this ${contactName}? This is ${agentName} calling regarding the ${campaignName}.\nCustomer: Yes, this is ${contactName}. What's this about?\nAgent: I'm calling to give you an update about ${campaignName}. Everything is set up and ready to go.\nCustomer: Oh, wonderful! Thank you for the update.\nAgent: You're welcome! Is there anything else I can help you with today?\nCustomer: No, that's all. Thanks again.\nAgent: Great, have a wonderful day! Goodbye.\nCustomer: Goodbye!`;
-      }
-
-      // Update call log in database
-      await insforge
-        .from('call_logs')
-        .update({
-          status,
-          duration,
-          summary,
-          transcript,
-          recording_url: status === 'completed' ? 'https://samplelib.com/lib/preview/mp3/sample-15s.mp3' : '',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', log.id);
-
-      // If this call log belongs to a campaign, check if all campaign logs are complete
-      if (log.campaign_id) {
-        // Fetch all logs for this campaign to see if all are finished
-        const { data: campaignLogs } = await insforge
-          .from('call_logs')
-          .select('status, id')
-          .eq('campaign_id', log.campaign_id);
-
-        if (campaignLogs) {
-          // Map local updates to statuses to check correctly
-          const statuses = campaignLogs.map((cl: any) => {
-            if (cl.id === log.id) return status;
-            return cl.status;
-          });
-
-          const allDone = !statuses.includes('pending') && !statuses.includes('calling');
-          if (allDone) {
-            await insforge
-              .from('campaigns')
-              .update({ status: 'completed', updated_at: new Date().toISOString() })
-              .eq('id', log.campaign_id);
-          }
-        }
-      }
-    })).catch(err => console.error('Simulated call auto-complete background update failed:', err));
-
-    // Optimistically update the in-memory array so the current call immediately shows updated values to user
-    callingSims.forEach((log: CallLog) => {
-      const contactName = log.contact_name || log.contacts?.name || 'Contact';
-      const campaignName = log.campaigns?.name || 'Outbound campaign';
-      const agentName = log.campaigns?.voice_agent_configurations?.name || 'VoiceFlow AI';
-      const duration = Math.floor(Math.random() * 30) + 15;
-      const rand = Math.random();
-      let status = 'completed';
-      let summary = '';
-      let transcript = '';
-
-      if (rand < 0.1) {
-        status = 'busy';
-        summary = `Attempted call to ${contactName}. The line was busy.`;
-      } else if (rand < 0.15) {
-        status = 'no-answer';
-        summary = `Attempted call to ${contactName}. There was no answer.`;
-      } else {
-        status = 'completed';
-        summary = `Successfully connected with ${contactName} regarding the "${campaignName}" campaign. The contact confirmed receipt of the updates and had no further questions.`;
-        transcript = `Agent: Hello, is this ${contactName}? This is ${agentName} calling regarding the ${campaignName}.\nCustomer: Yes, this is ${contactName}. What's this about?\nAgent: I'm calling to give you an update about ${campaignName}. Everything is set up and ready to go.\nCustomer: Oh, wonderful! Thank you for the update.\nAgent: You're welcome! Is there anything else I can help you with today?\nCustomer: No, that's all. Thanks again.\nAgent: Great, have a wonderful day! Goodbye.\nCustomer: Goodbye!`;
-      }
-
-      log.status = status;
-      log.duration = duration;
-      log.summary = summary;
-      log.transcript = transcript;
-      log.recording_url = status === 'completed' ? 'https://samplelib.com/lib/preview/mp3/sample-15s.mp3' : '';
-    });
-  }
 
   return logs;
 }
 
-export async function triggerCallCampaign(campaignId: string, simulate?: boolean): Promise<void> {
+export async function triggerCallCampaign(campaignId: string): Promise<void> {
   const token = getToken();
   const res = await fetch('/api/vapi/call', {
     method: 'POST',
@@ -889,7 +786,7 @@ export async function triggerCallCampaign(campaignId: string, simulate?: boolean
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {})
     },
-    body: JSON.stringify({ campaignId, simulate })
+    body: JSON.stringify({ campaignId })
   });
   
   if (!res.ok) {
@@ -914,7 +811,6 @@ export async function triggerSingleCall(
     voiceId?: string;
     campaignId?: string;
     contactId?: string;
-    simulate?: boolean;
   }
 ): Promise<SingleCallResult> {
   const token = getToken();
