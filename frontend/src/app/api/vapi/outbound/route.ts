@@ -93,8 +93,30 @@ export async function POST(req: Request) {
 
     const e164Phone = toE164(phone);
     const contactName = name || 'Contact';
-    const systemPrompt = prompt || 'You are a helpful assistant making an outbound call. Be brief and professional.';
-    const voice = voiceId || 'jennifer'; // 11labs default
+    
+    let systemPrompt = prompt || 'You are a helpful assistant making an outbound call. Be brief and professional.';
+    let voice = voiceId || 'jennifer'; // 11labs default
+    let agentLanguage = language || 'en';
+    let agentName = 'VoiceFlow AI';
+
+    if (campaignId) {
+      try {
+        const { data: campaign } = await userInsforge
+          .from('campaigns')
+          .select('*, voice_agent_configurations(*)')
+          .eq('id', campaignId)
+          .single();
+        if (campaign && campaign.voice_agent_configurations) {
+          const config = campaign.voice_agent_configurations;
+          if (!prompt && config.prompt) systemPrompt = config.prompt;
+          if (!voiceId && config.voice_id) voice = config.voice_id;
+          if (!language && config.language) agentLanguage = config.language;
+          if (config.name) agentName = config.name;
+        }
+      } catch (err) {
+        console.warn("Failed to fetch campaign config for single call:", err);
+      }
+    }
 
     // ── Create call log (pending) ─────────────────────────────────────
     const { data: callLog, error: logError } = await userInsforge
@@ -139,7 +161,7 @@ export async function POST(req: Request) {
         transcriber: {
           provider: 'deepgram',
           model: 'nova-2',
-          language: language || 'en',
+          language: agentLanguage,
         },
         model: {
           provider: 'openai',
@@ -151,7 +173,7 @@ export async function POST(req: Request) {
           provider: '11labs',
           voiceId: voice,
         },
-        firstMessage: `Hello ${contactName}, this is an automated call from VoiceFlow AI. How can I help you today?`,
+        firstMessage: `Hello ${contactName}, this is ${agentName} calling. How can I help you today?`,
       },
       customer: {
         number: e164Phone,

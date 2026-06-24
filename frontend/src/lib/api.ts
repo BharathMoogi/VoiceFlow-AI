@@ -759,14 +759,14 @@ export interface CallLog {
   transcript?: string;
   vapi_call_id?: string;
   created_at?: string;
-  campaigns?: { name: string };
+  campaigns?: { name: string; voice_agent_configurations?: { name: string } };
   contacts?: { name: string };
 }
 
 export async function getCallLogs(): Promise<CallLog[]> {
   const { data, error } = await insforge
     .from('call_logs')
-    .select('*, campaigns(name), contacts(name)')
+    .select('*, campaigns(name, voice_agent_configurations(name)), contacts(name)')
     .order('created_at', { ascending: false });
     
   if (error) throw new Error(error.message);
@@ -787,6 +787,7 @@ export async function getCallLogs(): Promise<CallLog[]> {
     Promise.all(callingSims.map(async (log: CallLog) => {
       const contactName = log.contact_name || log.contacts?.name || 'Contact';
       const campaignName = log.campaigns?.name || 'Outbound campaign';
+      const agentName = log.campaigns?.voice_agent_configurations?.name || 'VoiceFlow AI';
       
       // Generate mock call details
       const duration = Math.floor(Math.random() * 30) + 15; // 15 to 45s
@@ -804,7 +805,7 @@ export async function getCallLogs(): Promise<CallLog[]> {
       } else {
         status = 'completed';
         summary = `Successfully connected with ${contactName} regarding the "${campaignName}" campaign. The contact confirmed receipt of the updates and had no further questions.`;
-        transcript = `Agent: Hello, is this ${contactName}? This is VoiceFlow AI calling regarding the ${campaignName}.\nCustomer: Yes, this is ${contactName}. What's this about?\nAgent: I'm calling to give you an update about ${campaignName}. Everything is set up and ready to go.\nCustomer: Oh, wonderful! Thank you for the update.\nAgent: You're welcome! Is there anything else I can help you with today?\nCustomer: No, that's all. Thanks again.\nAgent: Great, have a wonderful day! Goodbye.\nCustomer: Goodbye!`;
+        transcript = `Agent: Hello, is this ${contactName}? This is ${agentName} calling regarding the ${campaignName}.\nCustomer: Yes, this is ${contactName}. What's this about?\nAgent: I'm calling to give you an update about ${campaignName}. Everything is set up and ready to go.\nCustomer: Oh, wonderful! Thank you for the update.\nAgent: You're welcome! Is there anything else I can help you with today?\nCustomer: No, that's all. Thanks again.\nAgent: Great, have a wonderful day! Goodbye.\nCustomer: Goodbye!`;
       }
 
       // Update call log in database
@@ -849,6 +850,7 @@ export async function getCallLogs(): Promise<CallLog[]> {
     callingSims.forEach((log: CallLog) => {
       const contactName = log.contact_name || log.contacts?.name || 'Contact';
       const campaignName = log.campaigns?.name || 'Outbound campaign';
+      const agentName = log.campaigns?.voice_agent_configurations?.name || 'VoiceFlow AI';
       const duration = Math.floor(Math.random() * 30) + 15;
       const rand = Math.random();
       let status = 'completed';
@@ -864,7 +866,7 @@ export async function getCallLogs(): Promise<CallLog[]> {
       } else {
         status = 'completed';
         summary = `Successfully connected with ${contactName} regarding the "${campaignName}" campaign. The contact confirmed receipt of the updates and had no further questions.`;
-        transcript = `Agent: Hello, is this ${contactName}? This is VoiceFlow AI calling regarding the ${campaignName}.\nCustomer: Yes, this is ${contactName}. What's this about?\nAgent: I'm calling to give you an update about ${campaignName}. Everything is set up and ready to go.\nCustomer: Oh, wonderful! Thank you for the update.\nAgent: You're welcome! Is there anything else I can help you with today?\nCustomer: No, that's all. Thanks again.\nAgent: Great, have a wonderful day! Goodbye.\nCustomer: Goodbye!`;
+        transcript = `Agent: Hello, is this ${contactName}? This is ${agentName} calling regarding the ${campaignName}.\nCustomer: Yes, this is ${contactName}. What's this about?\nAgent: I'm calling to give you an update about ${campaignName}. Everything is set up and ready to go.\nCustomer: Oh, wonderful! Thank you for the update.\nAgent: You're welcome! Is there anything else I can help you with today?\nCustomer: No, that's all. Thanks again.\nAgent: Great, have a wonderful day! Goodbye.\nCustomer: Goodbye!`;
       }
 
       log.status = status;

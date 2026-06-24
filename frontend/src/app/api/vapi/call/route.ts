@@ -104,6 +104,7 @@ export async function POST(req: Request) {
     const voiceId = agentConfig?.voice_id || 'jennifer';
     const temperature = Number(agentConfig?.temperature ?? 0.7);
     const agentLanguage = agentConfig?.language || 'en';
+    const agentName = agentConfig?.name || 'VoiceFlow AI';
 
     // ── Trigger calls for each contact ───────────────────────────────
     const results = await Promise.allSettled(
@@ -161,7 +162,7 @@ export async function POST(req: Request) {
                 provider: '11labs',
                 voiceId,
               },
-              firstMessage: `Hello ${contact.name}, this is an automated call from VoiceFlow AI.`,
+              firstMessage: `Hello ${contact.name}, this is ${agentName} calling.`,
             },
             customer: {
               number: e164Phone,
