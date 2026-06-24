@@ -324,12 +324,22 @@ export default function AgentConfigsPage() {
                       disabled={submitting}
                     >
                       <option value="en">English (en)</option>
+                      <option value="hi">Hindi (hi)</option>
+                      <option value="te">Telugu (te)</option>
+                      <option value="ta">Tamil (ta)</option>
+                      <option value="kn">Kannada (kn)</option>
+                      <option value="ml">Malayalam (ml)</option>
+                      <option value="mr">Marathi (mr)</option>
+                      <option value="bn">Bengali (bn)</option>
+                      <option value="gu">Gujarati (gu)</option>
+                      <option value="pa">Punjabi (pa)</option>
+                      <option value="ur">Urdu (ur)</option>
+                      <option value="or">Odia (or)</option>
                       <option value="es">Spanish (es)</option>
                       <option value="fr">French (fr)</option>
                       <option value="de">German (de)</option>
                       <option value="it">Italian (it)</option>
                       <option value="pt">Portuguese (pt)</option>
-                      <option value="hi">Hindi (hi)</option>
                       <option value="ja">Japanese (ja)</option>
                     </select>
                   </div>
