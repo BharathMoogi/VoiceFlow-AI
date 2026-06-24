@@ -816,6 +816,7 @@ export async function getCallLogs(): Promise<CallLog[]> {
           duration,
           summary,
           transcript,
+          recording_url: status === 'completed' ? 'https://samplelib.com/lib/preview/mp3/sample-15s.mp3' : '',
           updated_at: new Date().toISOString()
         })
         .eq('id', log.id);
@@ -873,6 +874,7 @@ export async function getCallLogs(): Promise<CallLog[]> {
       log.duration = duration;
       log.summary = summary;
       log.transcript = transcript;
+      log.recording_url = status === 'completed' ? 'https://samplelib.com/lib/preview/mp3/sample-15s.mp3' : '';
     });
   }
 
