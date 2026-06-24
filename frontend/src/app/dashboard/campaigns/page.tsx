@@ -660,7 +660,7 @@ export default function CampaignsPage() {
                                       }`}
                                       title={contactLog.summary || undefined}
                                     >
-                                      {contactLog.status}
+                                      {contactLog.vapi_call_id?.startsWith('sim_') ? `SIM ${contactLog.status}` : contactLog.status}
                                     </span>
                                   </>
                                 )}

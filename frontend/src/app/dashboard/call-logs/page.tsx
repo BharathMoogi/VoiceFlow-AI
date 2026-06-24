@@ -212,7 +212,14 @@ export default function CallLogsPage() {
                       className="hover:bg-zinc-800/10 transition-colors duration-150 cursor-pointer"
                     >
                       <td className="px-6 py-4">
-                        <p className="font-semibold text-white">{contactName}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-semibold text-white">{contactName}</p>
+                          {log.vapi_call_id?.startsWith('sim_') && (
+                            <span className="text-[8px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-1 py-0.2 rounded font-bold uppercase tracking-wider">
+                              SIM
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-gray-500">{log.contact_phone}</p>
                       </td>
                       <td className="px-6 py-4 text-gray-400 font-medium">{campaignName}</td>
@@ -256,6 +263,11 @@ export default function CallLogsPage() {
               <div>
                 <CardTitle className="text-lg flex items-center gap-2">
                   Call Log Explorer: {selectedLog.contact_name || selectedLog.contacts?.name || "Unknown"}
+                  {selectedLog.vapi_call_id?.startsWith('sim_') && (
+                    <span className="text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
+                      Simulated
+                    </span>
+                  )}
                 </CardTitle>
                 <CardDescription className="flex items-center gap-4 mt-1">
                   <span className="flex items-center gap-1 text-xs">
