@@ -39,7 +39,7 @@ import time
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from functools import partial
-from typing import Optional, Tuple, Type
+from typing import Optional, Tuple, Type, List, Dict
 
 from fastapi import HTTPException, status
 
@@ -127,6 +127,7 @@ class MailService:
         body: str,
         html: bool = False,
         cc: Optional[str] = None,
+        attachments: Optional[List[Dict[str, str]]] = None,
     ) -> MIMEMultipart:
         """
         Construct a MIME email message.
@@ -137,19 +138,55 @@ class MailService:
             body:      Body text (plain or HTML).
             html:      Send as text/html when True; text/plain otherwise.
             cc:        Optional CC address added to the CC header.
+            attachments: Optional list of attachments containing name and url.
 
         Returns:
             Populated MIMEMultipart object ready to send.
         """
-        msg = MIMEMultipart("alternative")
+        if attachments:
+            msg = MIMEMultipart("mixed")
+            body_container = MIMEMultipart("alternative")
+            subtype = "html" if html else "plain"
+            body_container.attach(MIMEText(body, subtype, "utf-8"))
+            msg.attach(body_container)
+            
+            for att in attachments:
+                file_url = att.get("url")
+                file_name = att.get("name") or "attachment"
+                if not file_url:
+                    continue
+                try:
+                    import urllib.request
+                    from email.mime.base import MIMEBase
+                    from email import encoders
+                    
+                    req = urllib.request.Request(
+                        file_url, 
+                        headers={'User-Agent': 'Mozilla/5.0'}
+                    )
+                    with urllib.request.urlopen(req, timeout=15) as response:
+                        file_bytes = response.read()
+                    
+                    part = MIMEBase("application", "octet-stream")
+                    part.set_payload(file_bytes)
+                    encoders.encode_base64(part)
+                    part.add_header(
+                        "Content-Disposition", 
+                        f'attachment; filename="{file_name}"'
+                    )
+                    msg.attach(part)
+                except Exception as e:
+                    logger.error(f"MailService: failed to download/attach file '{file_name}' from {file_url}: {e}")
+        else:
+            msg = MIMEMultipart("alternative")
+            subtype = "html" if html else "plain"
+            msg.attach(MIMEText(body, subtype, "utf-8"))
+
         msg["From"] = settings.SMTP_FROM_EMAIL
         msg["To"] = recipient
         msg["Subject"] = subject
         if cc:
             msg["Cc"] = cc
-
-        subtype = "html" if html else "plain"
-        msg.attach(MIMEText(body, subtype, "utf-8"))
         return msg
 
     def _connect_and_send(self, raw_message: str, recipient: str) -> None:
@@ -286,6 +323,7 @@ class MailService:
         body: str,
         html: bool = False,
         cc: Optional[str] = None,
+        attachments: Optional[List[Dict[str, str]]] = None,
     ) -> None:
         """
         Send an email asynchronously via SMTP with automatic retries.
@@ -300,6 +338,7 @@ class MailService:
             body:      Body — plain text by default; HTML when ``html=True``.
             html:      Send body as text/html.
             cc:        Optional CC address added to message headers.
+            attachments: Optional list of attachments containing name and url.
 
         Raises:
             HTTPException 503: SMTP credentials not configured.
@@ -312,7 +351,7 @@ class MailService:
         self._check_config()
 
         # Step 2 — build the MIME message (cheap, run in-thread)
-        msg = self._build_message(recipient, subject, body, html, cc)
+        msg = self._build_message(recipient, subject, body, html, cc, attachments)
         raw_message = msg.as_string()
 
         logger.info(

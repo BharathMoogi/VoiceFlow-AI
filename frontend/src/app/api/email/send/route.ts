@@ -8,7 +8,7 @@ const FROM_NAME = process.env.RESEND_FROM_NAME || 'VoiceFlow AI';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { to, subject, html, senderName, senderEmail } = body;
+    const { to, subject, html, senderName, senderEmail, attachments } = body;
 
     if (!to || !subject || !html) {
       return NextResponse.json(
@@ -33,12 +33,20 @@ export async function POST(req: Request) {
       subject: string;
       html: string;
       replyTo?: string;
+      attachments?: { filename: string; path: string }[];
     } = {
       from: `${fromName} <${FROM_EMAIL}>`,
       to: [to],
       subject,
       html,
     };
+
+    if (attachments && attachments.length > 0) {
+      emailOptions.attachments = attachments.map((att: any) => ({
+        filename: att.name || "attachment",
+        path: att.url
+      }));
+    }
 
     if (senderEmail) {
       emailOptions.replyTo = senderEmail;

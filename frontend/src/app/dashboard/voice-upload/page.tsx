@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback, useEffect } from "react";
 import {
   Upload, Mic, Square, FileAudio, CheckCircle,
   Loader2, Mail, Wand2, AlertCircle, RotateCcw, Save, Send, Volume2,
-  Languages, ArrowRight, Globe,
+  Languages, ArrowRight, Globe, Paperclip, X
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
@@ -112,6 +112,11 @@ export default function VoiceUploadPage() {
   const [actionError, setActionError]   = useState<string | null>(null);
   const [selectedLang, setSelectedLang] = useState("auto");    // voice recording language
 
+  // Attachments state
+  const [attachments, setAttachments] = useState<{ name: string; url: string; key: string }[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   // File / recording state
   const [audioFile, setAudioFile]   = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -209,6 +214,7 @@ export default function VoiceUploadPage() {
     }
 
     setTranscript(rawTranscript);
+    setAttachments([]);
     setStage("translating");
 
     let englishText = rawTranscript;
@@ -418,11 +424,37 @@ export default function VoiceUploadPage() {
 
   const toggleRecording = () => { if (isRecording) stopRecording(); else startRecording(); };
 
+  const handleAttachmentFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const bucket = insforge.storage.from("attachments");
+      const { data, error } = await bucket.uploadAuto(file);
+      if (error) throw error;
+      if (data) {
+        setAttachments((prev) => [...prev, { name: file.name, url: data.url, key: data.key }]);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setUploadError(err.message || "Failed to upload file");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
   // ── Save / Send ───────────────────────────────────────────────────────────────
   const handleSaveDraft = async () => {
     setActionError(null); setSaveSuccess(false); setIsSaving(true);
     try {
-      await saveEmailDraft({ recipient: recipientEmail, subject: emailSubject, body: emailBody });
+      await saveEmailDraft({ recipient: recipientEmail, subject: emailSubject, body: emailBody, attachments: attachments });
       setIsSaved(true); setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err: unknown) {
@@ -434,7 +466,7 @@ export default function VoiceUploadPage() {
     if (!recipientEmail) return;
     setActionError(null); setSendSuccess(false); setIsSending(true);
     try {
-      await sendEmail({ recipient: recipientEmail, subject: emailSubject, body: emailBody });
+      await sendEmail({ recipient: recipientEmail, subject: emailSubject, body: emailBody, attachments: attachments });
       setIsSaved(true); setSendSuccess(true);
       setTimeout(() => setSendSuccess(false), 3000);
     } catch (err: unknown) {
@@ -862,6 +894,43 @@ export default function VoiceUploadPage() {
                     className="w-full bg-[#1F2937]/60 border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-y font-mono leading-relaxed"
                     id="voice-email-body" />
                 </div>
+
+                {/* Attachments Section */}
+                <div className="space-y-2 border-t border-border pt-4 pb-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-gray-400">Attachments</span>
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 border border-white/[0.08] hover:border-violet-500/40 hover:bg-violet-500/5 text-xs text-gray-300 transition-all font-semibold">
+                      <Paperclip className="h-3.5 w-3.5" />
+                      <span>Attach File</span>
+                      <input type="file" onChange={handleAttachmentFileChange} className="hidden" />
+                    </label>
+                  </div>
+
+                  {isUploading && (
+                    <div className="flex items-center gap-2 text-xs text-violet-400 font-medium">
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>Uploading file...</span>
+                    </div>
+                  )}
+
+                  {uploadError && (
+                    <p className="text-xs text-red-400">{uploadError}</p>
+                  )}
+
+                  {attachments.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      {attachments.map((att, i) => (
+                        <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-900/80 border border-white/[0.06] text-xs text-gray-300">
+                          <span className="truncate max-w-[150px]">{att.name}</span>
+                          <button type="button" onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-red-400">
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex gap-2 pt-1">
                   <Button variant="outline" size="sm" className="flex-1" id="voice-save-draft-btn"
                     onClick={handleSaveDraft} disabled={isSaving || isSaved}>

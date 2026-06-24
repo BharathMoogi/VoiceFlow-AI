@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS public.email (
   subject text not null,
   body text not null,
   status text default 'draft',
+  attachments jsonb,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

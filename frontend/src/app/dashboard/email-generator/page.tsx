@@ -14,6 +14,8 @@ import {
   FileText,
   AlertCircle,
   Loader2,
+  Paperclip,
+  X,
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/UI/Card";
 import { Button } from "@/components/UI/Button";
@@ -51,6 +53,11 @@ export default function EmailGeneratorPage() {
   const [isPro, setIsPro] = useState(false);
   const [emailCount, setEmailCount] = useState(0);
 
+  // Attachments state
+  const [attachments, setAttachments] = useState<{ name: string; url: string; key: string }[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   useEffect(() => {
     const draft = sessionStorage.getItem("voiceflow_email_draft");
     if (draft) {
@@ -73,6 +80,32 @@ export default function EmailGeneratorPage() {
       .catch(() => {});
   }, []);
 
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    setUploadError(null);
+
+    try {
+      const bucket = insforge.storage.from("attachments");
+      const { data, error } = await bucket.uploadAuto(file);
+      if (error) throw error;
+      if (data) {
+        setAttachments((prev) => [...prev, { name: file.name, url: data.url, key: data.key }]);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setUploadError(err.message || "Failed to upload file");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
     if (!isPro && emailCount >= 5) {
@@ -81,6 +114,7 @@ export default function EmailGeneratorPage() {
     }
     setIsGenerating(true);
     setGeneratedEmail(null);
+    setAttachments([]);
     setActionError(null);
     try {
       const result = await generateEmail(prompt);
@@ -112,7 +146,8 @@ export default function EmailGeneratorPage() {
       await saveEmailDraft({
         recipient: recipient,
         subject: generatedEmail.subject,
-        body: generatedEmail.body
+        body: generatedEmail.body,
+        attachments: attachments
       });
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
@@ -133,7 +168,8 @@ export default function EmailGeneratorPage() {
       await sendEmail({
         recipient: recipient,
         subject: generatedEmail.subject,
-        body: generatedEmail.body
+        body: generatedEmail.body,
+        attachments: attachments
       });
       setSendSuccess(true);
       setTimeout(() => setSendSuccess(false), 3000);
@@ -147,6 +183,7 @@ export default function EmailGeneratorPage() {
 
   const handleRegenerate = () => {
     setGeneratedEmail(null);
+    setAttachments([]);
     handleGenerate();
   };
 
@@ -392,10 +429,46 @@ export default function EmailGeneratorPage() {
                       setGeneratedEmail({ ...generatedEmail, body: e.target.value })
                     }
                     rows={12}
-                    className="w-full bg-[#1F2937]/60 border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-y font-mono leading-relaxed"
-                    id="generated-body"
-                  />
-                </div>
+                        className="w-full bg-[#1F2937]/60 border border-white/[0.08] rounded-lg px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-indigo-500/30 transition-all resize-y font-mono leading-relaxed"
+                        id="generated-body"
+                      />
+                    </div>
+
+                    {/* Attachments Section */}
+                    <div className="space-y-2 border-t border-border pt-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-gray-400">Attachments</span>
+                        <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 border border-white/[0.08] hover:border-violet-500/40 hover:bg-violet-500/5 text-xs text-gray-300 transition-all font-semibold">
+                          <Paperclip className="h-3.5 w-3.5" />
+                          <span>Attach File</span>
+                          <input type="file" onChange={handleFileChange} className="hidden" />
+                        </label>
+                      </div>
+
+                      {isUploading && (
+                        <div className="flex items-center gap-2 text-xs text-violet-400 font-medium">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <span>Uploading file...</span>
+                        </div>
+                      )}
+
+                      {uploadError && (
+                        <p className="text-xs text-red-400">{uploadError}</p>
+                      )}
+
+                      {attachments.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {attachments.map((att, i) => (
+                            <div key={i} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-zinc-900/80 border border-white/[0.06] text-xs text-gray-300">
+                              <span className="truncate max-w-[150px]">{att.name}</span>
+                              <button type="button" onClick={() => removeAttachment(i)} className="text-gray-500 hover:text-red-400">
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
                  {/* Actions */}
                 <div className="flex gap-3 pt-2">

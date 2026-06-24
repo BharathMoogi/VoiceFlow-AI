@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List, Dict, Any
 from uuid import UUID
 from datetime import datetime
 
@@ -7,6 +7,7 @@ class EmailBase(BaseModel):
     recipient: str
     subject: str
     body: str
+    attachments: Optional[List[Dict[str, Any]]] = None
 
 class EmailCreate(EmailBase):
     pass

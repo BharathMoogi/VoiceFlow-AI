@@ -304,6 +304,7 @@ export interface EmailDraft {
   recipient: string;
   subject: string;
   body: string;
+  attachments?: { name: string; url: string; key: string }[];
 }
 
 export async function saveEmailDraft(emailData: EmailDraft): Promise<{ id: string }> {
@@ -322,6 +323,7 @@ export async function saveEmailDraft(emailData: EmailDraft): Promise<{ id: strin
         body: emailData.body,
         status: 'draft',
         user_id: user.id,
+        attachments: emailData.attachments || null
       },
     ])
     .select('id')
@@ -353,6 +355,7 @@ export async function sendEmail(emailData: EmailDraft): Promise<void> {
       html: emailData.body.replace(/\n/g, '<br/>'),
       senderName,
       senderEmail,
+      attachments: emailData.attachments || []
     }),
   });
 
@@ -371,6 +374,7 @@ export async function sendEmail(emailData: EmailDraft): Promise<void> {
         body: emailData.body,
         status: 'sent',
         user_id: user.id,
+        attachments: emailData.attachments || null
       },
     ]);
 

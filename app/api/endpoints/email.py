@@ -123,6 +123,7 @@ async def send_email(
             recipient=email_draft.recipient,
             subject=email_draft.subject,
             body=email_draft.body,
+            attachments=email_draft.attachments,
         )
     except HTTPException:
         # SMTP failed — roll back status to 'draft' so the user can retry
