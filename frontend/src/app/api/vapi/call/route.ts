@@ -202,9 +202,21 @@ export async function POST(req: Request) {
             .eq('id', callLog.id);
         } catch (err: any) {
           console.error(`Vapi call failed for contact ${contact.id}:`, err);
+          
+          let friendlyError = err.message;
+          try {
+            const parsed = JSON.parse(err.message);
+            if (parsed.message) {
+              friendlyError = parsed.message;
+              if (parsed.message.includes('Free Vapi numbers do not support international calls')) {
+                friendlyError = "Free Vapi numbers do not support international calls. Please configure a custom carrier or upgrade in Vapi Dashboard, or toggle 'Simulation' mode.";
+              }
+            }
+          } catch (_) {}
+
           await userInsforge
             .from('call_logs')
-            .update({ status: 'failed', summary: `Error: ${err.message}` })
+            .update({ status: 'failed', summary: `Error: ${friendlyError}` })
             .eq('id', callLog.id);
         }
       })

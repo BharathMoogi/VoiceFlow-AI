@@ -231,6 +231,37 @@ function LandingPageInner() {
 
   return (
     <div className="min-h-screen text-white bg-[#030712] relative overflow-hidden flex flex-col justify-between">
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-12px); }
+        }
+        @keyframes scan {
+          0%, 100% { top: 15%; opacity: 0.15; }
+          50% { top: 85%; opacity: 0.55; }
+        }
+        @keyframes blink {
+          0%, 96%, 100% { transform: scaleY(1); }
+          98% { transform: scaleY(0.1); }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.3)); }
+          50% { filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.65)) drop-shadow(0 0 35px rgba(6, 182, 212, 0.35)); }
+        }
+        @keyframes soundwave {
+          0%, 100% { height: 4px; }
+          50% { height: 26px; }
+        }
+        @keyframes eyeScan {
+          0%, 100% { transform: translateX(0px); }
+          50% { transform: translateX(4px); }
+        }
+        @keyframes eyeScanRight {
+          0%, 100% { transform: translateX(0px); }
+          50% { transform: translateX(-4px); }
+        }
+      `}} />
+
       {/* Background ambient orbs */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] orb-purple opacity-40 rounded-full blur-3xl" />
@@ -274,46 +305,71 @@ function LandingPageInner() {
       {/* Main Section */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-16 max-w-7xl mx-auto w-full relative z-20">
         
-        {/* Badge Intro */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-600/10 border border-violet-500/25 mb-6 animate-fade-in">
-          <Sparkles className="h-3 w-3 text-violet-400" />
-          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-violet-300">
-            Next-Gen Sales Outreach
-          </span>
-        </div>
+        {/* Split Hero Column Layout */}
+        <div className="flex flex-col lg:flex-row items-center justify-between gap-12 w-full mb-20">
+          
+          {/* Left Column: Hero Content */}
+          <div className="flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-3xl space-y-6">
+            {/* Badge Intro */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-600/10 border border-violet-500/25 animate-fade-in w-fit">
+              <Sparkles className="h-3 w-3 text-violet-400" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-violet-300">
+                Next-Gen Sales Outreach
+              </span>
+            </div>
 
-        {/* Hero Headline */}
-        <div className="text-center max-w-3xl space-y-4 mb-8">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight leading-[1.1]">
-            Transform Voice notes & Calls into{" "}
-            <span className="bg-gradient-to-r from-violet-400 via-indigo-300 to-cyan-300 bg-clip-text text-transparent">
-              Revenue Action
-            </span>
-          </h1>
-          <p className="text-sm sm:text-base text-gray-400 max-w-xl mx-auto leading-relaxed font-medium">
-            Generate high-converting email drafts, coordinate parent outreach, organize smart contact lists, and run automated AI-powered voice campaigns with Saarthi.
-          </p>
-        </div>
+            {/* Hero Headline */}
+            <div className="space-y-4">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-tight leading-[1.1] lg:max-w-2xl">
+                Transform Voice notes & Calls into{" "}
+                <span className="bg-gradient-to-r from-violet-400 via-indigo-300 to-cyan-300 bg-clip-text text-transparent">
+                  Revenue Action
+                </span>
+              </h1>
+              <p className="text-sm sm:text-base text-gray-400 max-w-xl mx-auto lg:mx-0 leading-relaxed font-medium">
+                Generate high-converting email drafts, coordinate parent outreach, organize smart contact lists, and run automated AI-powered voice campaigns with Saarthi.
+              </p>
+            </div>
 
-        {/* Hero CTA buttons */}
-        <div className="flex flex-col sm:flex-row items-center gap-3.5 mb-20">
-          <Button
-            variant="primary"
-            size="lg"
-            className="h-12 px-6 font-bold shadow-xl shadow-violet-600/25 group"
-            onClick={() => openModal("signup")}
-          >
-            Start Free Trial
-            <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            className="h-12 px-6 border-white/10 hover:bg-white/[0.04]"
-            onClick={() => openModal("signup")}
-          >
-            Schedule Demo
-          </Button>
+            {/* Hero CTA buttons */}
+            <div className="flex flex-col sm:flex-row items-center gap-3.5 w-full sm:w-auto">
+              <Button
+                variant="primary"
+                size="lg"
+                className="h-12 px-6 font-bold shadow-xl shadow-violet-600/25 group w-full sm:w-auto"
+                onClick={() => openModal("signup")}
+              >
+                Start Free Trial
+                <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="h-12 px-6 border-white/10 hover:bg-white/[0.04] w-full sm:w-auto"
+                onClick={() => openModal("signup")}
+              >
+                Schedule Demo
+              </Button>
+            </div>
+          </div>
+
+          {/* Right Column: Holographic Robot Avatar */}
+          <div className="flex-1 flex justify-center items-center relative w-full max-w-md lg:max-w-none">
+            <div className="relative w-full max-w-[340px] aspect-square flex items-center justify-center">
+              {/* Hologram rings/grid behind avatar */}
+              <div className="absolute inset-0 border border-violet-500/10 rounded-full animate-[spin_20s_linear_infinite]" />
+              <div className="absolute inset-4 border border-dashed border-cyan-500/15 rounded-full animate-[spin_15s_linear_infinite_reverse]" />
+              <div className="absolute inset-12 border border-violet-500/5 rounded-full" />
+              
+              {/* Holographic scanner beam line */}
+              <div className="absolute w-[120%] h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-35 animate-[scan_3s_ease-in-out_infinite]" />
+              
+              {/* The Robot Avatar */}
+              <div className="relative z-10 w-full h-full flex items-center justify-center animate-[float_4s_ease-in-out_infinite]">
+                <RobotAvatar />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Features Showcase Grid */}
@@ -909,6 +965,107 @@ function LandingPageInner() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function RobotAvatar() {
+  return (
+    <div className="relative w-72 h-72">
+      {/* Background glow orb */}
+      <div className="absolute inset-10 bg-gradient-to-tr from-violet-600/30 to-cyan-500/20 rounded-full blur-2xl opacity-60 animate-[pulseGlow_4s_ease-in-out_infinite]" />
+      
+      {/* Robot SVG */}
+      <svg 
+        viewBox="0 0 200 200" 
+        className="w-full h-full relative z-10 drop-shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:scale-[1.05] transition-all duration-300 cursor-pointer"
+      >
+        {/* Antennas / Ears */}
+        {/* Left ear/antenna receiver */}
+        <rect x="25" y="85" width="10" height="30" rx="3" fill="#1F2937" stroke="#4B5563" strokeWidth="1.5" />
+        <circle cx="20" cy="100" r="4" fill="#06B6D4" className="animate-pulse" />
+        
+        {/* Right ear/antenna receiver */}
+        <rect x="165" y="85" width="10" height="30" rx="3" fill="#1F2937" stroke="#4B5563" strokeWidth="1.5" />
+        <circle cx="180" cy="100" r="4" fill="#06B6D4" className="animate-pulse" />
+
+        {/* Antenna rod */}
+        <line x1="100" y1="50" x2="100" y2="25" stroke="#A78BFA" strokeWidth="3" />
+        <circle cx="100" cy="20" r="6" fill="#A78BFA" className="animate-pulse" />
+        <circle cx="100" cy="20" r="10" fill="none" stroke="#A78BFA" strokeWidth="1" className="animate-ping [animation-duration:2s]" />
+
+        {/* Neck */}
+        <path d="M85,145 L115,145 L110,165 L90,165 Z" fill="#1F2937" stroke="#4B5563" strokeWidth="1.5" />
+        <line x1="90" y1="152" x2="110" y2="152" stroke="#374151" strokeWidth="2" />
+        <line x1="92" y1="158" x2="108" y2="158" stroke="#374151" strokeWidth="2" />
+
+        {/* Robot Head Frame */}
+        <rect 
+          x="35" 
+          y="50" 
+          width="130" 
+          height="100" 
+          rx="24" 
+          fill="#0B0F19" 
+          stroke="url(#headGrad)" 
+          strokeWidth="3.5" 
+        />
+        
+        {/* Dark screen display area */}
+        <rect 
+          x="44" 
+          y="59" 
+          width="112" 
+          height="82" 
+          rx="16" 
+          fill="#030712" 
+          stroke="#1F2937" 
+          strokeWidth="1" 
+        />
+
+        {/* Matrix grid inside screen */}
+        <defs>
+          <linearGradient id="headGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#A78BFA" />
+            <stop offset="50%" stopColor="#6366F1" />
+            <stop offset="100%" stopColor="#06B6D4" />
+          </linearGradient>
+          
+          <pattern id="screenGrid" width="6" height="6" patternUnits="userSpaceOnUse">
+            <path d="M 6 0 L 0 0 0 6" fill="none" stroke="#ffffff" strokeWidth="0.5" strokeOpacity="0.04" />
+          </pattern>
+        </defs>
+        <rect x="44" y="59" width="112" height="82" rx="16" fill="url(#screenGrid)" />
+
+        {/* Eyes (Blinking and scanning) */}
+        {/* Left eye slot */}
+        <ellipse cx="68" cy="90" rx="16" ry="8" fill="#1E1B4B" />
+        <circle cx="68" cy="90" r="6" fill="#06B6D4" style={{ transformOrigin: '68px 90px', animation: 'blink 5s infinite, eyeScan 6s ease-in-out infinite' }} />
+        <circle cx="66" cy="88" r="2" fill="#ffffff" style={{ transformOrigin: '68px 90px', animation: 'blink 5s infinite, eyeScan 6s ease-in-out infinite' }} />
+
+        {/* Right eye slot */}
+        <ellipse cx="132" cy="90" rx="16" ry="8" fill="#1E1B4B" />
+        <circle cx="132" cy="90" r="6" fill="#06B6D4" style={{ transformOrigin: '132px 90px', animation: 'blink 5s infinite, eyeScanRight 6s ease-in-out infinite' }} />
+        <circle cx="130" cy="88" r="2" fill="#ffffff" style={{ transformOrigin: '132px 90px', animation: 'blink 5s infinite, eyeScanRight 6s ease-in-out infinite' }} />
+
+        {/* Speaking mouth wave (Soundwaves) */}
+        <g transform="translate(72, 112)">
+          {/* Wave bar 1 */}
+          <rect x="0" y="8" width="3" height="4" rx="1.5" fill="#A78BFA" style={{ transformOrigin: '1.5px 10px', animation: 'soundwave 1.2s ease-in-out infinite' }} />
+          {/* Wave bar 2 */}
+          <rect x="8" y="8" width="3" height="4" rx="1.5" fill="#6366F1" style={{ transformOrigin: '9.5px 10px', animation: 'soundwave 0.8s ease-in-out infinite 0.15s' }} />
+          {/* Wave bar 3 (Center) */}
+          <rect x="16" y="8" width="3" height="4" rx="1.5" fill="#06B6D4" style={{ transformOrigin: '17.5px 10px', animation: 'soundwave 1.5s ease-in-out infinite 0.3s' }} />
+          {/* Wave bar 4 */}
+          <rect x="24" y="8" width="3" height="4" rx="1.5" fill="#6366F1" style={{ transformOrigin: '25.5px 10px', animation: 'soundwave 0.8s ease-in-out infinite 0.15s' }} />
+          {/* Wave bar 5 */}
+          <rect x="32" y="8" width="3" height="4" rx="1.5" fill="#A78BFA" style={{ transformOrigin: '33.5px 10px', animation: 'soundwave 1.2s ease-in-out infinite' }} />
+        </g>
+        
+        {/* Subtle cheek blush */}
+        <circle cx="49" cy="115" r="4" fill="#EC4899" fillOpacity="0.25" />
+        <circle cx="151" cy="115" r="4" fill="#EC4899" fillOpacity="0.25" />
+      </svg>
     </div>
   );
 }

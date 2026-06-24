@@ -225,7 +225,7 @@ export default function CallLogsPage() {
                             : log.status === 'failed'
                             ? "bg-rose-500/10 border-rose-500/20 text-rose-400"
                             : log.status === 'busy' || log.status === 'no-answer'
-                            ? "bg-[#1F2937]border-white/[0.08] text-gray-400"
+                            ? "bg-[#1F2937] border-white/[0.08] text-gray-400"
                             : "bg-violet-500/10 border-violet-500/20 text-violet-400"
                         }`}>
                           {log.status}

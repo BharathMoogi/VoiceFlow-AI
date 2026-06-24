@@ -35,6 +35,8 @@ import {
   triggerSingleCall,
   getCallLogs,
   getUserInfo,
+  createContact,
+  updateCampaignStatus,
   type Campaign,
   type AgentConfig,
   type Contact,
@@ -240,8 +242,39 @@ export default function CampaignsPage() {
     }
   };
 
+  // Quick contact form inside modal
+  const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [quickName, setQuickName] = useState("");
+  const [quickPhone, setQuickPhone] = useState("");
+
+  const handleQuickAddContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickName || !quickPhone) {
+      setError("Name and Phone are required for the new contact.");
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      const newContact = await createContact(quickName, quickPhone);
+      setAllContacts(prev => [newContact, ...prev]);
+      setSelectedContactIds(prev => [...prev, newContact.id]);
+      setQuickName("");
+      setQuickPhone("");
+      setShowQuickAdd(false);
+      setSuccess("Contact created and selected!");
+    } catch (err: any) {
+      setError(err.message || "Failed to create contact");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleOpenAddContacts = () => {
     setSelectedContactIds([]);
+    setQuickName("");
+    setQuickPhone("");
+    setShowQuickAdd(false);
     setError(null);
     setShowAddContactsModal(true);
   };
@@ -257,6 +290,15 @@ export default function CampaignsPage() {
 
     try {
       await addContactsToCampaign(selectedCampaign.id, selectedContactIds);
+      
+      // Reset campaign status back to draft if it was completed
+      if (selectedCampaign.status === 'completed') {
+        await updateCampaignStatus(selectedCampaign.id, 'draft');
+        const updated = { ...selectedCampaign, status: 'draft' as const };
+        setSelectedCampaign(updated);
+        setCampaigns(prev => prev.map(c => c.id === selectedCampaign.id ? updated : c));
+      }
+
       // Reload contacts
       const updatedContacts = await getCampaignContacts(selectedCampaign.id);
       setSelectedCampaignContacts(updatedContacts);
@@ -567,7 +609,7 @@ export default function CampaignsPage() {
                       variant="outline" 
                       size="sm" 
                       onClick={handleOpenAddContacts}
-                      disabled={selectedCampaign.status === 'completed' || submitting}
+                      disabled={submitting}
                     >
                       Add Contacts
                     </Button>
@@ -592,6 +634,10 @@ export default function CampaignsPage() {
                     <div className="divide-y divide-zinc-850/30 max-h-[350px] overflow-y-auto">
                       {selectedCampaignContacts.map((contact) => {
                         const isCalling = callingContactIds.has(contact.id);
+                        const contactLog = campaignLogs
+                          .filter(log => log.contact_id === contact.id)
+                          .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime())[0];
+
                         return (
                           <div 
                             key={contact.id} 
@@ -599,7 +645,26 @@ export default function CampaignsPage() {
                           >
                             <div className="min-w-0 flex-1">
                               <p className="text-sm font-medium text-white">{contact.name}</p>
-                              <p className="text-xs text-gray-500">{contact.phone}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <p className="text-xs text-gray-500">{contact.phone}</p>
+                                {contactLog && (
+                                  <>
+                                    <span className="text-zinc-600 text-xs font-semibold">•</span>
+                                    <span 
+                                      className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wider border ${
+                                        contactLog.status === 'completed' || contactLog.status === 'ended' || contactLog.status === 'success'
+                                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                          : contactLog.status === 'failed' || contactLog.status === 'error' || contactLog.status === 'rejected'
+                                          ? 'bg-rose-500/10 text-rose-400 border-rose-500/20 cursor-help'
+                                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20 animate-pulse'
+                                      }`}
+                                      title={contactLog.summary || undefined}
+                                    >
+                                      {contactLog.status}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
                             </div>
                             <div className="flex items-center gap-2 ml-3">
                               {/* Per-contact single call button */}
@@ -626,7 +691,7 @@ export default function CampaignsPage() {
                                 onClick={() => handleRemoveContact(contact.id)}
                                 className="p-1.5 rounded text-gray-600 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                                 title="Remove contact from campaign"
-                                disabled={selectedCampaign.status === 'completed' || submitting}
+                                disabled={submitting}
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </button>
@@ -723,7 +788,60 @@ export default function CampaignsPage() {
               </button>
             </CardHeader>
             
-            <div className="flex-1 overflow-y-auto p-6 space-y-3">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              {/* Quick Create Contact Form */}
+              {!showQuickAdd ? (
+                <button
+                  type="button"
+                  onClick={() => setShowQuickAdd(true)}
+                  className="w-full py-2.5 px-3 border border-dashed border-violet-500/30 hover:border-violet-500/60 rounded-xl text-xs font-semibold text-violet-400 hover:text-violet-300 flex items-center justify-center gap-1.5 transition-colors bg-zinc-950/40"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Quick Create New Contact
+                </button>
+              ) : (
+                <form onSubmit={handleQuickAddContact} className="p-4 rounded-xl border border-violet-500/20 bg-violet-600/5 space-y-3">
+                  <div className="flex items-center justify-between border-b border-white/[0.05] pb-2 mb-1">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-violet-400">Quick New Contact</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowQuickAdd(false)}
+                      className="text-gray-500 hover:text-white text-xs font-medium"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  <Input
+                    label="Name *"
+                    value={quickName}
+                    onChange={(e) => setQuickName(e.target.value)}
+                    placeholder="Contact name"
+                    disabled={submitting}
+                    className="h-9 py-1 px-3 text-xs bg-zinc-950/80"
+                  />
+                  <Input
+                    label="Phone Number *"
+                    value={quickPhone}
+                    onChange={(e) => setQuickPhone(e.target.value)}
+                    placeholder="+916303875878"
+                    disabled={submitting}
+                    className="h-9 py-1 px-3 text-xs bg-zinc-950/80"
+                  />
+                  <div className="flex justify-end gap-1.5 pt-1">
+                    <Button
+                      type="submit"
+                      size="sm"
+                      className="h-8 text-xs bg-violet-600 hover:bg-violet-500 text-white font-medium px-3.5"
+                      isLoading={submitting}
+                    >
+                      Create & Select
+                    </Button>
+                  </div>
+                </form>
+              )}
+
+              <div className="border-t border-white/[0.06] my-2" />
+
               {assignableContacts.length === 0 ? (
                 <div className="text-center py-8 text-gray-500 text-xs">
                   All active contacts in database are already assigned to this campaign.

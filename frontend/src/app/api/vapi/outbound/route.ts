@@ -204,13 +204,27 @@ export async function POST(req: Request) {
     if (!vapiRes.ok) {
       const errText = await vapiRes.text();
       console.error('Vapi API error:', errText);
+      
+      let friendlyError = `Vapi API error: ${errText}`;
+      let summaryText = `Vapi error: ${errText}`;
+      try {
+        const parsed = JSON.parse(errText);
+        if (parsed.message) {
+          friendlyError = parsed.message;
+          summaryText = `Vapi error: ${parsed.message}`;
+          if (parsed.message.includes('Free Vapi numbers do not support international calls')) {
+            friendlyError = "Your Vapi phone number is a free trial number which does not support international calls. To make live international calls (e.g. to the UK, India, etc.), please configure a custom phone number or carrier (Twilio/Vonage) in your Vapi dashboard (https://dashboard.vapi.ai) and update your VAPI_PHONE_NUMBER_ID in .env.local. Alternatively, you can toggle the 'Simulation' switch at the top right of the campaign details screen to perform tests.";
+          }
+        }
+      } catch (_) {}
+
       // Mark call log as failed
       await userInsforge
         .from('call_logs')
-        .update({ status: 'failed', summary: `Vapi error: ${errText}` })
+        .update({ status: 'failed', summary: summaryText })
         .eq('id', callLog.id);
       return NextResponse.json(
-        { detail: `Vapi API error: ${errText}` },
+        { detail: friendlyError },
         { status: vapiRes.status }
       );
     }
