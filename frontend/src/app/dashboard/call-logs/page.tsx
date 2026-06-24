@@ -99,10 +99,20 @@ export default function CallLogsPage() {
       if (!trimmed) return;
       
       const lower = trimmed.toLowerCase();
-      if (lower.startsWith('agent:') || lower.startsWith('assistant:')) {
+      if (
+        lower.startsWith('agent:') || 
+        lower.startsWith('assistant:') || 
+        lower.startsWith('ai:') || 
+        lower.startsWith('bot:')
+      ) {
         const content = trimmed.substring(trimmed.indexOf(':') + 1).trim();
         parsed.push({ role: 'agent', content });
-      } else if (lower.startsWith('user:') || lower.startsWith('customer:') || lower.startsWith('parent:')) {
+      } else if (
+        lower.startsWith('user:') || 
+        lower.startsWith('customer:') || 
+        lower.startsWith('parent:') || 
+        lower.startsWith('human:')
+      ) {
         const content = trimmed.substring(trimmed.indexOf(':') + 1).trim();
         parsed.push({ role: 'user', content });
       } else {
