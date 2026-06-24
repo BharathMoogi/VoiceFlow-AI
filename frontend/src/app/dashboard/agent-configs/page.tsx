@@ -41,6 +41,7 @@ export default function AgentConfigsPage() {
   const [prompt, setPrompt] = useState("");
   const [voiceId, setVoiceId] = useState("josh");
   const [temperature, setTemperature] = useState(0.7);
+  const [language, setLanguage] = useState("en");
 
   // Status notifications
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +71,7 @@ export default function AgentConfigsPage() {
     setPrompt("");
     setVoiceId("josh");
     setTemperature(0.7);
+    setLanguage("en");
     setError(null);
     setSuccess(null);
     setShowModal(true);
@@ -81,6 +83,7 @@ export default function AgentConfigsPage() {
     setPrompt(config.prompt);
     setVoiceId(config.voice_id);
     setTemperature(Number(config.temperature));
+    setLanguage(config.language || "en");
     setError(null);
     setSuccess(null);
     setShowModal(true);
@@ -100,12 +103,12 @@ export default function AgentConfigsPage() {
       setSubmitting(true);
       if (editingId) {
         // Edit Mode
-        const updated = await updateAgentConfig(editingId, name, prompt, voiceId, temperature);
+        const updated = await updateAgentConfig(editingId, name, prompt, voiceId, temperature, language);
         setConfigs((prev) => prev.map((c) => (c.id === editingId ? updated : c)));
         setSuccess("Configuration updated successfully!");
       } else {
         // Create Mode
-        const created = await createAgentConfig(name, prompt, voiceId, temperature);
+        const created = await createAgentConfig(name, prompt, voiceId, temperature, language);
         setConfigs((prev) => [created, ...prev]);
         setSuccess("Configuration created successfully!");
       }
@@ -219,10 +222,14 @@ export default function AgentConfigsPage() {
 
                 <div className="flex items-center justify-between text-xs text-gray-500 pt-2">
                   <span className="flex items-center gap-1">
-                    Temperature: 
+                    Temp: 
                     <span className="font-semibold text-gray-300">{config.temperature}</span>
                   </span>
-                  <span className="text-[10px] bg-[#1F2937]text-gray-400 py-0.5 px-1.5 rounded">Vapi Agent</span>
+                  <span className="flex items-center gap-1">
+                    Lang: 
+                    <span className="font-semibold text-gray-300 uppercase">{config.language || "en"}</span>
+                  </span>
+                  <span className="text-[10px] bg-[#1F2937] text-gray-400 py-0.5 px-1.5 rounded">Vapi Agent</span>
                 </div>
               </div>
 
@@ -309,21 +316,40 @@ export default function AgentConfigsPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-1.5 flex justify-between">
-                      <span>Creativity (Temp)</span>
-                      <span className="text-violet-400 font-bold">{temperature}</span>
-                    </label>
-                    <input
-                      type="range"
-                      min="0.1"
-                      max="1.0"
-                      step="0.05"
-                      value={temperature}
-                      onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                      className="w-full accent-indigo-600 mt-2.5 cursor-ew-resize"
+                    <label className="block text-xs font-semibold text-gray-400 uppercase mb-1.5">Agent Language</label>
+                    <select
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      className="w-full rounded-lg border border-white/[0.08] bg-zinc-950 p-2.5 text-sm text-white focus:outline-none focus:border-violet-500/50"
                       disabled={submitting}
-                    />
+                    >
+                      <option value="en">English (en)</option>
+                      <option value="es">Spanish (es)</option>
+                      <option value="fr">French (fr)</option>
+                      <option value="de">German (de)</option>
+                      <option value="it">Italian (it)</option>
+                      <option value="pt">Portuguese (pt)</option>
+                      <option value="hi">Hindi (hi)</option>
+                      <option value="ja">Japanese (ja)</option>
+                    </select>
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-400 uppercase mb-1.5 flex justify-between">
+                    <span>Creativity (Temp)</span>
+                    <span className="text-violet-400 font-bold">{temperature}</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0.1"
+                    max="1.0"
+                    step="0.05"
+                    value={temperature}
+                    onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                    className="w-full accent-indigo-600 mt-2.5 cursor-ew-resize"
+                    disabled={submitting}
+                  />
                 </div>
               </CardContent>
               <div className="p-6 pt-0 flex justify-end gap-2">

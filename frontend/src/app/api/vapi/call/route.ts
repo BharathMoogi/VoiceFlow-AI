@@ -103,6 +103,7 @@ export async function POST(req: Request) {
     const systemPrompt = agentConfig?.prompt || 'You are a helpful assistant making an outbound call.';
     const voiceId = agentConfig?.voice_id || 'jennifer';
     const temperature = Number(agentConfig?.temperature ?? 0.7);
+    const agentLanguage = agentConfig?.language || 'en';
 
     // ── Trigger calls for each contact ───────────────────────────────
     const results = await Promise.allSettled(
@@ -148,7 +149,7 @@ export async function POST(req: Request) {
               transcriber: {
                 provider: 'deepgram',
                 model: 'nova-2',
-                language: 'en',
+                language: agentLanguage,
               },
               model: {
                 provider: 'openai',

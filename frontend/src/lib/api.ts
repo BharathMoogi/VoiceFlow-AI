@@ -594,6 +594,7 @@ export interface AgentConfig {
   prompt: string;
   voice_id: string;
   temperature: number;
+  language?: string;
   created_at?: string;
 }
 
@@ -603,7 +604,7 @@ export async function getAgentConfigs(): Promise<AgentConfig[]> {
   return data || [];
 }
 
-export async function createAgentConfig(name: string, prompt: string, voice_id: string, temperature: number): Promise<AgentConfig> {
+export async function createAgentConfig(name: string, prompt: string, voice_id: string, temperature: number, language = "en"): Promise<AgentConfig> {
   const userResult = await insforge.auth.getCurrentUser();
   if (userResult.error || !userResult.data || !userResult.data.user) throw new Error("Not authenticated");
   const userData = userResult.data;
@@ -626,6 +627,7 @@ export async function createAgentConfig(name: string, prompt: string, voice_id: 
     prompt,
     voice_id,
     temperature,
+    language,
     user_id: userData.user.id
   }]).select().single();
   
@@ -633,7 +635,7 @@ export async function createAgentConfig(name: string, prompt: string, voice_id: 
   return data;
 }
 
-export async function updateAgentConfig(id: string, name: string, prompt: string, voice_id: string, temperature: number): Promise<AgentConfig> {
+export async function updateAgentConfig(id: string, name: string, prompt: string, voice_id: string, temperature: number, language = "en"): Promise<AgentConfig> {
   const { plan } = getUserInfo();
   if (plan === "free" && ["rachel", "paul"].includes(voice_id)) {
     throw new Error("Premium ElevenLabs voices are only available on the Pro plan. Please upgrade to select this voice.");
@@ -643,7 +645,8 @@ export async function updateAgentConfig(id: string, name: string, prompt: string
     name,
     prompt,
     voice_id,
-    temperature
+    temperature,
+    language
   }).eq('id', id).select().single();
   
   if (error) throw new Error(error.message);

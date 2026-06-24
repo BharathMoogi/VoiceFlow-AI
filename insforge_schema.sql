@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS public.voice_agent_configurations (
   prompt text not null,
   voice_id text default 'josh',
   temperature numeric default 0.7,
+  language text default 'en',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

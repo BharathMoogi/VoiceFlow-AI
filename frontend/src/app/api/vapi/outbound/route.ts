@@ -76,7 +76,7 @@ export async function POST(req: Request) {
 
     // ── Input ─────────────────────────────────────────────────────────
     const body = await req.json();
-    const { phone, name, prompt, voiceId, campaignId, contactId, simulate } = body as {
+    const { phone, name, prompt, voiceId, campaignId, contactId, simulate, language } = body as {
       phone: string;
       name?: string;
       prompt?: string;
@@ -84,6 +84,7 @@ export async function POST(req: Request) {
       campaignId?: string;
       contactId?: string;
       simulate?: boolean;
+      language?: string;
     };
 
     if (!phone) {
@@ -138,7 +139,7 @@ export async function POST(req: Request) {
         transcriber: {
           provider: 'deepgram',
           model: 'nova-2',
-          language: 'en',
+          language: language || 'en',
         },
         model: {
           provider: 'openai',
