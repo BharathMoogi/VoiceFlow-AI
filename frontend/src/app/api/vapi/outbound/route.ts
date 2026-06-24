@@ -155,6 +155,7 @@ export async function POST(req: Request) {
     // ── Real Vapi outbound call ───────────────────────────────────────
     const vapiPayload: Record<string, unknown> = {
       assistant: {
+        recordingEnabled: true,
         transcriber: {
           provider: 'deepgram',
           model: 'nova-2',

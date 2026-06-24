@@ -149,6 +149,7 @@ export async function POST(req: Request) {
         try {
           const vapiPayload: Record<string, unknown> = {
             assistant: {
+              recordingEnabled: true,
               transcriber: {
                 provider: 'deepgram',
                 model: 'nova-2',
